@@ -227,6 +227,7 @@ class Simulation {
       creatures: this.creatures.map(c => ({
         s: c.species === 'hunter' ? 1 : 0,
         x: c.x, y: c.y, e: c.energy, h: c.hue, g: c.generation, a: c.age,
+        sz: c.size, vi: c.vision,
         w: c.brain.weights.map(bytesToB64), b: c.brain.biases.map(bytesToB64),
       })),
     });
@@ -245,7 +246,7 @@ class Simulation {
     this.world = w;
     this.creatures = d.creatures.map(o => {
       const brain = new NeuralNet(CONFIG.brainLayers, o.w.map(b64ToF32), o.b.map(b64ToF32));
-      const c = new Creature(o.s ? 'hunter' : 'grazer', o.x, o.y, o.e, brain, o.h, o.g);
+      const c = new Creature(o.s ? 'hunter' : 'grazer', o.x, o.y, o.e, brain, o.h, o.g, o.sz, o.vi);
       c.age = o.a;
       return c;
     });
@@ -260,15 +261,18 @@ class Simulation {
   }
 
   stats() {
-    let grazers = 0, hunters = 0, maxGen = 0, oldest = 0;
+    let grazers = 0, hunters = 0, maxGen = 0, oldest = 0, sizeSum = 0, visSum = 0;
     for (const c of this.creatures) {
       if (c.species === 'grazer') grazers++; else hunters++;
       if (c.generation > maxGen) maxGen = c.generation;
       if (c.age > oldest) oldest = c.age;
+      sizeSum += c.size; visSum += c.vision;
     }
+    const n = this.creatures.length || 1;
     return {
       tick: this.tickCount, pop: this.creatures.length,
       grazers, hunters, maxGen, oldest, born: this.born, died: this.died,
+      avgSize: sizeSum / n, avgVision: visSum / n,
     };
   }
 }

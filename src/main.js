@@ -118,6 +118,8 @@ function updateHUD() {
   set('stat-grazers', s.grazers);
   set('stat-hunters', s.hunters);
   set('stat-gen', s.maxGen);
+  set('stat-size', s.avgSize.toFixed(2));
+  set('stat-vision', s.avgVision.toFixed(1));
   set('stat-oldest', s.oldest);
   set('stat-born', s.born);
   set('stat-died', s.died);

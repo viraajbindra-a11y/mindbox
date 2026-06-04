@@ -107,14 +107,15 @@ class Renderer {
       if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
       const px = (c.x - this.cam.x) * s + s / 2;
       const py = (c.y - this.cam.y) * s + s / 2;
-      const light = 42 + Math.min(34, (c.energy / CONFIG.maxEnergy) * 34);
+      const light = 42 + Math.min(34, (c.energy / c.maxE) * 34);
+      const sz = Math.min(1.45, c.size);
       if (s < 3) {
         ctx.fillStyle = `hsl(${c.hue | 0},80%,${light}%)`;
         ctx.fillRect(px - s / 2, py - s / 2, Math.ceil(s), Math.ceil(s));
       } else if (c.species === 'hunter') {
         ctx.fillStyle = `hsl(${c.hue | 0},85%,${light}%)`;
         ctx.beginPath();
-        ctx.arc(px, py, s * 0.62, 0, 6.283);
+        ctx.arc(px, py, s * 0.62 * sz, 0, 6.283);
         ctx.fill();
         ctx.lineWidth = Math.max(1, s * 0.16);
         ctx.strokeStyle = '#3a0d0d';
@@ -122,7 +123,7 @@ class Renderer {
       } else {
         ctx.fillStyle = `hsl(${c.hue | 0},72%,${light}%)`;
         ctx.beginPath();
-        ctx.arc(px, py, s * 0.5, 0, 6.283);
+        ctx.arc(px, py, s * 0.5 * sz, 0, 6.283);
         ctx.fill();
         if (s >= 4) { ctx.lineWidth = Math.max(1, s * 0.12); ctx.strokeStyle = 'rgba(8,18,12,0.7)'; ctx.stroke(); }
       }
