@@ -88,3 +88,7 @@ label i { color: #7fd1a6; font-style: normal; }
 input[type=range] { width: 100%; accent-color: #3b6ea5; }
 
 .hint p { margin: 0; font-size: 12px; color: #7c8699; line-height: 1.55; }
+
+canvas.mini { width: 100%; display: block; background: #0e1320; border: 1px solid #222a3a; border-radius: 6px; }
+.insp-info { font-size: 12.5px; line-height: 1.5; color: #c4ccda; margin-bottom: 7px; }
+.brainkey { margin: 6px 0 0; font-size: 10.5px; color: #6b7790; line-height: 1.45; }

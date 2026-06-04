@@ -12,6 +12,8 @@ class Simulation {
     this.died = 0;
     this.gC = 0;
     this.hC = 0;
+    this.history = [];     // [grazers, hunters] samples for the live graph
+    this.selected = null;  // creature being inspected
     this.seed();
   }
 
@@ -26,6 +28,8 @@ class Simulation {
     this.grid = new Array(CONFIG.gridW * CONFIG.gridH).fill(null);
     this.burning = new Set();
     this.tickCount = this.born = this.died = 0;
+    this.history = [];
+    this.selected = null;
     this.seed();
   }
 
@@ -52,6 +56,15 @@ class Simulation {
     const c = new Creature(species, x, y, CONFIG.startEnergy, b, hue, 0);
     this.grid[this.world.idx(x, y)] = c;
     this.creatures.push(c);
+  }
+
+  selectAt(tx, ty) {
+    let best = null, bestD = 81;  // pick the nearest creature within ~9 tiles
+    for (const c of this.creatures) {
+      const d = (c.x - tx) ** 2 + (c.y - ty) ** 2;
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    if (best) this.selected = best;
   }
 
   kill(c) {
@@ -102,6 +115,10 @@ class Simulation {
     while (grazers < CONFIG.minGrazers) { this.spawnRandom('grazer'); grazers++; }
     while (hunters < CONFIG.minHunters) { this.spawnRandom('hunter'); hunters++; }
 
+    if (this.tickCount % 4 === 0) {
+      this.history.push([grazers, hunters]);
+      if (this.history.length > 320) this.history.shift();
+    }
     this.tickCount++;
   }
 

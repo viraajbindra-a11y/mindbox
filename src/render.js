@@ -120,11 +120,24 @@ class Renderer {
         ctx.strokeStyle = '#3a0d0d';
         ctx.stroke();
       } else {
-        ctx.fillStyle = `hsl(${c.hue | 0},70%,${light}%)`;
+        ctx.fillStyle = `hsl(${c.hue | 0},72%,${light}%)`;
         ctx.beginPath();
-        ctx.arc(px, py, s * 0.46, 0, 6.283);
+        ctx.arc(px, py, s * 0.5, 0, 6.283);
         ctx.fill();
+        if (s >= 4) { ctx.lineWidth = Math.max(1, s * 0.12); ctx.strokeStyle = 'rgba(8,18,12,0.7)'; ctx.stroke(); }
       }
+    }
+
+    // highlight the inspected creature
+    const sel = sim.selected;
+    if (sel && sel.alive && sel.x >= x0 - 1 && sel.x <= x1 + 1 && sel.y >= y0 - 1 && sel.y <= y1 + 1) {
+      const px = (sel.x - this.cam.x) * s + s / 2;
+      const py = (sel.y - this.cam.y) * s + s / 2;
+      ctx.lineWidth = Math.max(1.5, s * 0.16);
+      ctx.strokeStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(px, py, s * 0.95, 0, 6.283);
+      ctx.stroke();
     }
   }
 }

@@ -36,6 +36,7 @@
           <button data-tool="grazer">🐑 Grazer</button>
           <button data-tool="hunter">🐺 Hunter</button>
           <button data-tool="smite">💀 Smite</button>
+          <button data-tool="inspect">🔍 Inspect</button>
         </div>
         <div class="group">
           <span class="ghd">Disasters</span>
@@ -67,6 +68,19 @@
           <div><span>Oldest</span><b id="stat-oldest">0</b></div>
           <div><span>Births</span><b id="stat-born">0</b></div>
           <div><span>Deaths</span><b id="stat-died">0</b></div>
+        </section>
+
+        <section>
+          <label>Population — <i style="color:#7fd1a6">grazers</i> vs <i style="color:#e06a6a">hunters</i></label>
+          <canvas id="chart" class="mini" width="248" height="78"></canvas>
+        </section>
+
+        <section id="inspector" style="display:none">
+          <label>🔍 Inspected mind <span id="insp-follow"></span></label>
+          <div id="insp-info" class="insp-info"></div>
+          <canvas id="brain" class="mini" width="248" height="150"></canvas>
+          <p class="brainkey">live brain — left: senses, right: actions (↑↓←→ move, ✦ breed).
+             <span style="color:#6ec896">green</span>/<span style="color:#dc6e5a">red</span> = positive/negative.</p>
         </section>
 
         <section>

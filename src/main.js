@@ -18,7 +18,97 @@ function loop() {
     for (let i = 0; i < CONFIG.ticksPerFrame; i++) sim.tick();
   renderer.draw(sim);
   updateHUD();
+  drawChart();
+  updateInspector();
   requestAnimationFrame(loop);
+}
+
+function drawChart() {
+  const cv = document.getElementById('chart');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const hist = sim.history;
+  if (hist.length < 2) return;
+  let maxV = CONFIG.minHunters + 10;
+  for (const p of hist) { if (p[0] > maxV) maxV = p[0]; if (p[1] > maxV) maxV = p[1]; }
+  const n = hist.length;
+  const plot = (idx, color) => {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * W;
+      const y = H - 2 - (hist[i][idx] / maxV) * (H - 4);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  };
+  plot(0, '#7fd1a6'); // grazers
+  plot(1, '#e06a6a'); // hunters
+}
+
+function updateInspector() {
+  const sec = document.getElementById('inspector');
+  const sel = sim.selected;
+  if (!sel) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  const info = document.getElementById('insp-info');
+  if (!sel.alive) {
+    info.innerHTML = '☠ <b>this mind has died</b><br>' +
+      '<span style="color:#7c8699">its descendants may still carry its brain</span>';
+    document.getElementById('brain').getContext('2d').clearRect(0, 0, 248, 150);
+    return;
+  }
+  const sp = sel.species === 'hunter' ? '🐺 Hunter' : '🐑 Grazer';
+  info.innerHTML = `${sp} &nbsp;·&nbsp; generation <b>${sel.generation}</b><br>` +
+    `energy ${sel.energy.toFixed(0)} &nbsp;·&nbsp; age ${sel.age}`;
+  drawBrain(sel);
+}
+
+function drawBrain(c) {
+  const cv = document.getElementById('brain');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  const acts = c.brain.trace(c.sense(sim.world, sim));
+  const layers = c.brain.layers;
+  const colX = l => 16 + (W - 32) * (l / (layers.length - 1));
+  const nodeY = (l, i) => { const n = layers[l]; return 12 + (H - 24) * (n === 1 ? 0.5 : i / (n - 1)); };
+
+  for (let l = 0; l < c.brain.weights.length; l++) {
+    const w = c.brain.weights[l], inN = layers[l], outN = layers[l + 1];
+    for (let i = 0; i < inN; i++) {
+      const x1 = colX(l), y1 = nodeY(l, i);
+      for (let o = 0; o < outN; o++) {
+        const wt = w[i * outN + o];
+        const a = Math.min(0.45, Math.abs(wt) * 0.45);
+        if (a < 0.05) continue;
+        ctx.strokeStyle = wt > 0 ? `rgba(110,200,150,${a})` : `rgba(220,110,90,${a})`;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(colX(l + 1), nodeY(l + 1, o));
+        ctx.stroke();
+      }
+    }
+  }
+  for (let l = 0; l < layers.length; l++) {
+    for (let i = 0; i < layers[l]; i++) {
+      const v = Math.max(-1, Math.min(1, acts[l][i]));
+      ctx.fillStyle = v >= 0
+        ? `rgb(${(50 + 20 * v) | 0},${(120 + 110 * v) | 0},${(95 + 40 * v) | 0})`
+        : `rgb(${(150 + 80 * -v) | 0},80,70)`;
+      ctx.beginPath();
+      ctx.arc(colX(l), nodeY(l, i), 3.1, 0, 6.283);
+      ctx.fill();
+    }
+  }
+  const labels = ['↑', '↓', '←', '→', '✦'];
+  ctx.fillStyle = '#9aa4b6';
+  ctx.font = '9px monospace';
+  const lastL = layers.length - 1;
+  for (let o = 0; o < layers[lastL]; o++) ctx.fillText(labels[o] || '', W - 11, nodeY(lastL, o) + 3);
 }
 
 function updateHUD() {
@@ -78,6 +168,7 @@ function setupCanvas() {
     else if (tool === 'grazer') sim.spawnAt('grazer', tx, ty);
     else if (tool === 'hunter') sim.spawnAt('hunter', tx, ty);
     else if (tool === 'smite') sim.smite(tx, ty, brush);
+    else if (tool === 'inspect') sim.selectAt(tx, ty);
     else if (isDown && ONESHOT.has(tool)) sim[tool](tx, ty);
   };
 

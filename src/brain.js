@@ -62,6 +62,27 @@ class NeuralNet {
     return act;
   }
 
+  // Like forward(), but returns every layer's activations (for the brain
+  // visualizer, so you can watch a creature "think").
+  trace(inputs) {
+    const acts = [inputs];
+    let act = inputs;
+    for (let l = 0; l < this.weights.length; l++) {
+      const inN = this.layers[l], outN = this.layers[l + 1];
+      const w = this.weights[l], bias = this.biases[l];
+      const next = new Float32Array(outN);
+      const last = (l === this.weights.length - 1);
+      for (let o = 0; o < outN; o++) {
+        let sum = bias[o];
+        for (let i = 0; i < inN; i++) sum += act[i] * w[i * outN + o];
+        next[o] = last ? 1 / (1 + Math.exp(-sum)) : Math.tanh(sum);
+      }
+      acts.push(next);
+      act = next;
+    }
+    return acts;
+  }
+
   clone() {
     return new NeuralNet(
       this.layers,
