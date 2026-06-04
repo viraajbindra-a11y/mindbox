@@ -10,7 +10,9 @@ const CONFIG = {
   startHunters: 14,
   minGrazers: 12,         // immigration floor so the world never fully dies
   minHunters: 6,          // keep predators around so the food chain persists
-  maxPop: 1100,           // hard safety cap on total creatures (per-species caps live in species.js)
+  maxPop: 1000,           // hard safety cap on total creatures
+  capScale: 0.5,          // scales every species' cap so the world settles
+                          // below maxPop, leaving room for constant births
 
   // --- senses ---
   visionRadius: 5,
@@ -31,7 +33,7 @@ const CONFIG = {
 
   // --- plants ---
   foodStart: 0.4,
-  foodGrowth: 0.012,
+  foodGrowth: 0.009,
 
   // --- evolution / learning ---
   mutationRate: 0.12,

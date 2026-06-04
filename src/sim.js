@@ -96,7 +96,7 @@ class Simulation {
 
   canReproduce(key) {
     if (this.creatures.length >= CONFIG.maxPop) return false;
-    return (this.counts[key] || 0) < SPECIES[key].cap;
+    return (this.counts[key] || 0) < SPECIES[key].cap * CONFIG.capScale;
   }
 
   tick() {

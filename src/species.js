@@ -35,12 +35,12 @@ const SPECIES = {
   wolf: sp({ name: 'Wolf', emoji: '🐺', hue: 222, diet: 'meat', eats: ['sheep', 'rabbit', 'deer'],
              size: 1.05, vision: 6, metabolism: 0.2, maxEnergy: 170, preyEnergy: 62, reproduceAt: 110,
              start: 14, min: 3, cap: 90 }),
-  fox:  sp({ name: 'Fox', emoji: '🦊', hue: 22, diet: 'meat', eats: ['rabbit'], size: 0.8, vision: 6,
+  fox:  sp({ name: 'Fox', emoji: '🦊', hue: 22, diet: 'meat', eats: ['rabbit', 'chicken'], size: 0.8, vision: 6,
              metabolism: 0.15, maxEnergy: 130, preyEnergy: 50, reproduceAt: 85, start: 12, min: 3, cap: 80 }),
-  lion: sp({ name: 'Lion', emoji: '🦁', hue: 42, diet: 'meat', eats: ['deer', 'cow', 'sheep', 'boar'],
+  lion: sp({ name: 'Lion', emoji: '🦁', hue: 42, diet: 'meat', eats: ['deer', 'cow', 'sheep', 'boar', 'mammoth'],
              strong: true, size: 1.25, vision: 6, metabolism: 0.22, maxEnergy: 200, preyEnergy: 72,
              reproduceAt: 130, start: 8, min: 2, cap: 55 }),
-  snake: sp({ name: 'Snake', emoji: '🐍', hue: 135, diet: 'meat', eats: ['rabbit'], size: 0.7, vision: 5,
+  snake: sp({ name: 'Snake', emoji: '🐍', hue: 135, diet: 'meat', eats: ['rabbit', 'chicken'], size: 0.7, vision: 5,
              metabolism: 0.12, maxEnergy: 120, preyEnergy: 46, reproduceAt: 80, start: 12, min: 3, cap: 80 }),
 
   // ---------------- omnivores (land) ----------------
@@ -55,7 +55,7 @@ const SPECIES = {
   fish:  sp({ name: 'Fish', emoji: '🐟', hue: 198, domain: 'water', size: 0.7, vision: 4, metabolism: 0.1,
               maxEnergy: 100, foodValue: 24, reproduceAt: 65, reproduceCost: 42, maxAge: 1500,
               start: 60, min: 10, cap: 260 }),
-  shark: sp({ name: 'Shark', emoji: '🦈', hue: 208, domain: 'water', diet: 'meat', eats: ['fish'],
+  shark: sp({ name: 'Shark', emoji: '🦈', hue: 208, domain: 'water', diet: 'meat', eats: ['fish', 'penguin', 'crab'],
               strong: true, size: 1.3, vision: 6, metabolism: 0.2, maxEnergy: 200, preyEnergy: 66,
               reproduceAt: 130, start: 7, min: 2, cap: 55 }),
 
@@ -69,9 +69,51 @@ const SPECIES = {
 
   // ---------------- apex (flies over everything) ----------------
   dragon: sp({ name: 'Dragon', emoji: '🐉', hue: 2, domain: 'air', diet: 'meat',
-               eats: ['sheep', 'rabbit', 'deer', 'cow', 'wolf', 'fox', 'boar', 'human', 'orc', 'fish'],
+               eats: ['sheep', 'rabbit', 'deer', 'cow', 'wolf', 'fox', 'boar', 'human', 'orc', 'fish',
+                      'elf', 'dwarf', 'mammoth', 'chicken'],
                strong: true, size: 1.5, vision: 8, metabolism: 0.24, maxEnergy: 300, preyEnergy: 120,
                reproduceAt: 220, reproduceCost: 140, maxAge: 5000, start: 2, min: 1, cap: 10 }),
+
+  // ---------------- the other two kingdoms ----------------
+  elf:   sp({ name: 'Elf', emoji: '🧝', hue: 150, diet: 'omni', eats: ['rabbit', 'deer', 'orc'],
+              vision: 7, metabolism: 0.15, maxEnergy: 165, preyEnergy: 52, reproduceAt: 108,
+              start: 14, min: 3, cap: 110 }),
+  dwarf: sp({ name: 'Dwarf', emoji: '🧔', hue: 30, diet: 'omni', eats: ['boar', 'sheep', 'orc'],
+              size: 0.95, vision: 5, metabolism: 0.16, maxEnergy: 175, preyEnergy: 54, reproduceAt: 112,
+              start: 14, min: 3, cap: 100 }),
+
+  // ---------------- more animals ----------------
+  chicken: sp({ name: 'Chicken', emoji: '🐔', hue: 50, size: 0.6, metabolism: 0.1, maxEnergy: 90,
+                foodValue: 22, reproduceAt: 58, reproduceCost: 38, maxAge: 1300, start: 50, min: 8, cap: 220 }),
+  penguin: sp({ name: 'Penguin', emoji: '🐧', hue: 210, size: 0.85, metabolism: 0.13, maxEnergy: 130,
+                foodValue: 26, reproduceAt: 92, start: 16, min: 3, cap: 90 }),
+  mammoth: sp({ name: 'Mammoth', emoji: '🦣', hue: 25, size: 1.65, vision: 5, metabolism: 0.22,
+                maxEnergy: 260, foodValue: 38, reproduceAt: 170, reproduceCost: 110, start: 8, min: 2, cap: 40 }),
+
+  // ---------------- more aquatic ----------------
+  crab:    sp({ name: 'Crab', emoji: '🦀', hue: 10, domain: 'water', size: 0.7, metabolism: 0.1,
+                maxEnergy: 110, foodValue: 24, reproduceAt: 70, start: 24, min: 5, cap: 130 }),
+  whale:   sp({ name: 'Whale', emoji: '🐋', hue: 215, domain: 'water', size: 1.7, vision: 5,
+                metabolism: 0.18, maxEnergy: 280, foodValue: 40, reproduceAt: 180, reproduceCost: 120,
+                start: 6, min: 2, cap: 28 }),
+  octopus: sp({ name: 'Octopus', emoji: '🐙', hue: 300, domain: 'water', diet: 'meat',
+                eats: ['fish', 'crab'], size: 1.0, vision: 6, metabolism: 0.16, maxEnergy: 160,
+                preyEnergy: 56, reproduceAt: 105, start: 8, min: 2, cap: 60 }),
+
+  // ---------------- monsters & undead ----------------
+  slime:    sp({ name: 'Slime', emoji: '🟢', hue: 110, diet: 'omni', eats: ['chicken'], size: 0.8,
+                 metabolism: 0.1, maxEnergy: 120, foodValue: 22, preyEnergy: 30, reproduceAt: 70,
+                 reproduceCost: 44, start: 16, min: 3, cap: 160 }),
+  skeleton: sp({ name: 'Skeleton', emoji: '💀', hue: 50, diet: 'meat',
+                 eats: ['sheep', 'deer', 'human', 'elf', 'dwarf', 'chicken'], size: 1.0, vision: 6,
+                 metabolism: 0.1, maxEnergy: 150, preyEnergy: 58, reproduceAt: 110, start: 8, min: 2, cap: 70 }),
+  demon:    sp({ name: 'Demon', emoji: '😈', hue: 0, diet: 'meat',
+                 eats: ['sheep', 'deer', 'human', 'orc', 'wolf', 'mammoth', 'slime'], strong: true,
+                 size: 1.3, vision: 7, metabolism: 0.22, maxEnergy: 220, preyEnergy: 80, reproduceAt: 150,
+                 reproduceCost: 95, start: 4, min: 1, cap: 30 }),
+  golem:    sp({ name: 'Golem', emoji: '🗿', hue: 30, diet: 'meat', eats: ['human', 'orc', 'sheep'],
+                 strong: true, size: 1.5, vision: 4, metabolism: 0.12, maxEnergy: 260, preyEnergy: 60,
+                 reproduceAt: 160, reproduceCost: 110, maxAge: 5000, start: 4, min: 1, cap: 24 }),
 };
 
 // derived lookups
