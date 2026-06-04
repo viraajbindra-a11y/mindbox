@@ -48,6 +48,9 @@ const CONFIG = {
   fireDamage: 16,
   fireSpread: 0.20,
 
+  // --- atmosphere ---
+  dayLength: 1200,        // ticks per full day/night cycle (visual only)
+
   // --- speed ---
   ticksPerFrame: 3,
 };

@@ -66,17 +66,20 @@ class Creature {
   step(world, sim) {
     if (!this.alive) return null;
     const out = this.brain.forward(this.sense(world, sim));
-    // outputs: 0=up 1=down 2=left 3=right 4=reproduce
+    // outputs: 0=up 1=down 2=left 3=right 4=reproduce (unused — see below)
 
-    let dir = 0, best = out[0];
-    for (let k = 1; k < 4; k++) if (out[k] > best) { best = out[k]; dir = k; }
+    // Try the brain's preferred directions in order. Falling back to the next
+    // choice when blocked lets creatures flow around each other instead of
+    // jamming into frozen clumps.
     const DX = [0, 0, -1, 1], DY = [-1, 1, 0, 0];
-    const nx = this.x + DX[dir], ny = this.y + DY[dir];
-
-    // move into an empty, walkable tile (creatures block one another)
-    if (world.walkable(nx, ny) && !sim.grid[world.idx(nx, ny)]) {
-      this.moveTo(sim, nx, ny);
-      this.energy -= CONFIG.moveCost;
+    const order = [0, 1, 2, 3].sort((a, b) => out[b] - out[a]);
+    for (const d of order) {
+      const nx = this.x + DX[d], ny = this.y + DY[d];
+      if (world.walkable(nx, ny) && !sim.grid[world.idx(nx, ny)]) {
+        this.moveTo(sim, nx, ny);
+        this.energy -= CONFIG.moveCost;
+        break;
+      }
     }
 
     if (this.species === 'grazer') {

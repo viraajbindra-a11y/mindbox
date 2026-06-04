@@ -124,10 +124,30 @@ function updateHUD() {
 }
 function set(id, v) { document.getElementById(id).textContent = v; }
 
+function flashBtn(id, text) {
+  const b = document.getElementById(id);
+  const old = b.textContent;
+  b.textContent = text;
+  setTimeout(() => { b.textContent = old; }, 1100);
+}
+
 function setupUI() {
   const playBtn = document.getElementById('btn-play');
   playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pause' : '▶ Play'; };
   document.getElementById('btn-reset').onclick = () => sim.reset();
+
+  document.getElementById('btn-save').onclick = () => {
+    try {
+      localStorage.setItem('mindbox_save', sim.serialize());
+      flashBtn('btn-save', '✓ Saved');
+    } catch (e) { alert('Save failed: ' + e.message); }
+  };
+  document.getElementById('btn-load').onclick = () => {
+    const s = localStorage.getItem('mindbox_save');
+    if (!s) { alert('No saved world yet — hit 💾 Save first.'); return; }
+    try { sim.load(s); flashBtn('btn-load', '✓ Loaded'); }
+    catch (e) { alert('Load failed: ' + e.message); }
+  };
 
   document.querySelectorAll('[data-tool]').forEach(btn => {
     btn.onclick = () => selectTool(btn.dataset.tool);

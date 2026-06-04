@@ -1,6 +1,23 @@
 // sim.js — runs time: food growth, fire, every creature's turn, births,
 // deaths, immigration, and the god-power disasters.
 
+// --- compact save/load helpers: typed arrays <-> base64 ---
+function bytesToB64(arr) {
+  const bytes = new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength);
+  let bin = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK)
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  return btoa(bin);
+}
+function b64ToBytes(s) {
+  const bin = atob(s);
+  const u = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return u;
+}
+function b64ToF32(s) { const b = b64ToBytes(s); return new Float32Array(b.buffer, 0, b.length / 4); }
+
 class Simulation {
   constructor() {
     this.world = new World(CONFIG.gridW, CONFIG.gridH);
@@ -196,6 +213,50 @@ class Simulation {
   smite(cx, cy, r) {
     for (const c of this.creatures)
       if ((c.x - cx) ** 2 + (c.y - cy) ** 2 <= r * r) this.kill(c);
+  }
+
+  // --- save / load the whole world (terrain + every creature's brain) ---
+  serialize() {
+    const w = this.world;
+    return JSON.stringify({
+      v: 1, gw: w.w, gh: w.h,
+      biome: bytesToB64(w.biome), tree: bytesToB64(w.tree),
+      elev: bytesToB64(w.elev), moist: bytesToB64(w.moist),
+      temp: bytesToB64(w.temp), food: bytesToB64(w.food),
+      tick: this.tickCount, born: this.born, died: this.died,
+      creatures: this.creatures.map(c => ({
+        s: c.species === 'hunter' ? 1 : 0,
+        x: c.x, y: c.y, e: c.energy, h: c.hue, g: c.generation, a: c.age,
+        w: c.brain.weights.map(bytesToB64), b: c.brain.biases.map(bytesToB64),
+      })),
+    });
+  }
+
+  load(str) {
+    const d = JSON.parse(str);
+    const w = new World(d.gw, d.gh);
+    w.biome = b64ToBytes(d.biome);
+    w.tree = b64ToBytes(d.tree);
+    w.elev = b64ToF32(d.elev);
+    w.moist = b64ToF32(d.moist);
+    w.temp = b64ToF32(d.temp);
+    w.food = b64ToF32(d.food);
+    w.fire = new Float32Array(d.gw * d.gh);
+    this.world = w;
+    this.creatures = d.creatures.map(o => {
+      const brain = new NeuralNet(CONFIG.brainLayers, o.w.map(b64ToF32), o.b.map(b64ToF32));
+      const c = new Creature(o.s ? 'hunter' : 'grazer', o.x, o.y, o.e, brain, o.h, o.g);
+      c.age = o.a;
+      return c;
+    });
+    this.grid = new Array(w.w * w.h).fill(null);
+    this.burning = new Set();
+    this.tickCount = d.tick || 0;
+    this.born = d.born || 0;
+    this.died = d.died || 0;
+    this.history = [];
+    this.selected = null;
+    this.rebuildGrid();
   }
 
   stats() {

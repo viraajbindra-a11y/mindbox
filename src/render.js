@@ -139,5 +139,12 @@ class Renderer {
       ctx.arc(px, py, s * 0.95, 0, 6.283);
       ctx.stroke();
     }
+
+    // day/night tint (purely visual)
+    const day = 0.5 + 0.5 * Math.sin((sim.tickCount / CONFIG.dayLength) * 6.283);
+    if (day < 0.96) {
+      ctx.fillStyle = `rgba(10,18,48,${((1 - day) * 0.4).toFixed(3)})`;
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
   }
 }
