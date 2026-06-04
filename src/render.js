@@ -60,6 +60,15 @@ class Renderer {
     this.clamp();
   }
 
+  // smoothly keep a tile centered (used to follow an inspected creature)
+  centerOn(tx, ty, lerp = 0.15) {
+    const viewW = this.canvas.width / this.cam.scale;
+    const viewH = this.canvas.height / this.cam.scale;
+    this.cam.x += ((tx + 0.5 - viewW / 2) - this.cam.x) * lerp;
+    this.cam.y += ((ty + 0.5 - viewH / 2) - this.cam.y) * lerp;
+    this.clamp();
+  }
+
   draw(sim) {
     const ctx = this.ctx, s = this.cam.scale, world = sim.world;
     const W = world.w, H = world.h;

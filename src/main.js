@@ -1,5 +1,5 @@
 // main.js — wires the toolbar + camera + main loop together.
-let sim, renderer, playing = true, tool = 'hand', brush = 3;
+let sim, renderer, playing = true, tool = 'hand', brush = 3, following = false;
 
 // which tools paint terrain (drag-paint) vs. fire one-shot disasters
 const TERRAIN = { land: 'raise', water: 'water', mountain: 'mountain',
@@ -16,6 +16,8 @@ function init() {
 function loop() {
   if (playing)
     for (let i = 0; i < CONFIG.ticksPerFrame; i++) sim.tick();
+  if (following && sim.selected && sim.selected.alive)
+    renderer.centerOn(sim.selected.x, sim.selected.y);
   renderer.draw(sim);
   updateHUD();
   drawChart();
@@ -190,7 +192,7 @@ function setupCanvas() {
     else if (tool === 'grazer') sim.spawnAt('grazer', tx, ty);
     else if (tool === 'hunter') sim.spawnAt('hunter', tx, ty);
     else if (tool === 'smite') sim.smite(tx, ty, brush);
-    else if (tool === 'inspect') sim.selectAt(tx, ty);
+    else if (tool === 'inspect') { sim.selectAt(tx, ty); if (sim.selected) following = true; }
     else if (isDown && ONESHOT.has(tool)) sim[tool](tx, ty);
   };
 
@@ -200,7 +202,7 @@ function setupCanvas() {
     else { lmb = true; apply(e, true); }
   });
   window.addEventListener('mousemove', e => {
-    if (pan && last) { renderer.pan(e.clientX - last.x, e.clientY - last.y); last = { x: e.clientX, y: e.clientY }; }
+    if (pan && last) { renderer.pan(e.clientX - last.x, e.clientY - last.y); last = { x: e.clientX, y: e.clientY }; following = false; }
     else if (lmb) apply(e, false);
   });
   window.addEventListener('mouseup', () => { lmb = false; pan = false; last = null; });
