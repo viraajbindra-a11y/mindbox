@@ -3,11 +3,7 @@
 // an elevation + moisture (used to pick the biome), a plant-food amount, a
 // tree flag, and a fire timer. God tools terraform the map by changing these.
 
-// biome ids
-const B = {
-  DEEP: 0, SHALLOW: 1, SAND: 2, GRASS: 3,
-  FOREST: 4, SAVANNA: 5, ROCK: 6, SNOW: 7,
-};
+// biome ids (B) are defined in config.js so species.js can reference them
 
 function fertilityOf(b) {
   if (b === B.GRASS) return 0.95;

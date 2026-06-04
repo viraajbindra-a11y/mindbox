@@ -61,7 +61,11 @@ class Simulation {
     for (let t = 0; t < 200; t++) {
       const x = Math.floor(Math.random() * this.world.w);
       const y = Math.floor(Math.random() * this.world.h);
-      if (this.canStand(def, x, y) && !this.grid[this.world.idx(x, y)]) return [x, y];
+      const i = this.world.idx(x, y);
+      if (!this.canStand(def, x, y) || this.grid[i]) continue;
+      // for the first tries, insist on the species' preferred biome; then settle
+      if (def.habitat && t < 150 && !def.habitat.includes(this.world.biome[i])) continue;
+      return [x, y];
     }
     return null;
   }

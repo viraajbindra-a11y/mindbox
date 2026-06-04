@@ -1,4 +1,11 @@
 // config.js — every tunable number in one place. UI sliders edit these live.
+
+// biome ids (defined here so species.js, world.js and render.js can all use them)
+const B = {
+  DEEP: 0, SHALLOW: 1, SAND: 2, GRASS: 3,
+  FOREST: 4, SAVANNA: 5, ROCK: 6, SNOW: 7,
+};
+
 const CONFIG = {
   // --- world / drawing ---
   gridW: 160,

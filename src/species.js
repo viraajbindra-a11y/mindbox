@@ -39,14 +39,15 @@ const SPECIES = {
              metabolism: 0.15, maxEnergy: 130, preyEnergy: 50, reproduceAt: 85, start: 12, min: 3, cap: 80 }),
   lion: sp({ name: 'Lion', emoji: '🦁', hue: 42, diet: 'meat', eats: ['deer', 'cow', 'sheep', 'boar', 'mammoth'],
              strong: true, size: 1.25, vision: 6, metabolism: 0.22, maxEnergy: 200, preyEnergy: 72,
-             reproduceAt: 130, start: 8, min: 2, cap: 55 }),
+             reproduceAt: 130, start: 8, min: 2, cap: 55, habitat: [B.SAVANNA, B.GRASS] }),
   snake: sp({ name: 'Snake', emoji: '🐍', hue: 135, diet: 'meat', eats: ['rabbit', 'chicken'], size: 0.7, vision: 5,
-             metabolism: 0.12, maxEnergy: 120, preyEnergy: 46, reproduceAt: 80, start: 12, min: 3, cap: 80 }),
+             metabolism: 0.12, maxEnergy: 120, preyEnergy: 46, reproduceAt: 80, start: 12, min: 3, cap: 80,
+             habitat: [B.SAVANNA, B.SAND] }),
 
   // ---------------- omnivores (land) ----------------
   bear: sp({ name: 'Bear', emoji: '🐻', hue: 20, diet: 'omni', eats: ['sheep', 'deer', 'fish'],
              size: 1.3, vision: 5, metabolism: 0.2, maxEnergy: 210, preyEnergy: 58, foodValue: 28,
-             reproduceAt: 135, start: 8, min: 2, cap: 60 }),
+             reproduceAt: 135, start: 8, min: 2, cap: 60, habitat: [B.FOREST] }),
   boar: sp({ name: 'Boar', emoji: '🐗', hue: 285, diet: 'omni', eats: ['rabbit'], size: 1.0, vision: 5,
              metabolism: 0.16, maxEnergy: 160, preyEnergy: 44, foodValue: 26, reproduceAt: 100,
              start: 14, min: 3, cap: 90 }),
@@ -86,9 +87,10 @@ const SPECIES = {
   chicken: sp({ name: 'Chicken', emoji: '🐔', hue: 50, size: 0.6, metabolism: 0.1, maxEnergy: 90,
                 foodValue: 22, reproduceAt: 58, reproduceCost: 38, maxAge: 1300, start: 50, min: 8, cap: 220 }),
   penguin: sp({ name: 'Penguin', emoji: '🐧', hue: 210, size: 0.85, metabolism: 0.13, maxEnergy: 130,
-                foodValue: 26, reproduceAt: 92, start: 16, min: 3, cap: 90 }),
+                foodValue: 26, reproduceAt: 92, start: 16, min: 3, cap: 90, habitat: [B.SNOW, B.SAND] }),
   mammoth: sp({ name: 'Mammoth', emoji: '🦣', hue: 25, size: 1.65, vision: 5, metabolism: 0.22,
-                maxEnergy: 260, foodValue: 38, reproduceAt: 170, reproduceCost: 110, start: 8, min: 2, cap: 40 }),
+                maxEnergy: 260, foodValue: 38, reproduceAt: 170, reproduceCost: 110, start: 8, min: 2, cap: 40,
+                habitat: [B.SNOW] }),
 
   // ---------------- more aquatic ----------------
   crab:    sp({ name: 'Crab', emoji: '🦀', hue: 10, domain: 'water', size: 0.7, metabolism: 0.1,
@@ -113,7 +115,8 @@ const SPECIES = {
                  reproduceCost: 95, start: 4, min: 1, cap: 30 }),
   golem:    sp({ name: 'Golem', emoji: '🗿', hue: 30, diet: 'meat', eats: ['human', 'orc', 'sheep'],
                  strong: true, size: 1.5, vision: 4, metabolism: 0.12, maxEnergy: 260, preyEnergy: 60,
-                 reproduceAt: 160, reproduceCost: 110, maxAge: 5000, start: 4, min: 1, cap: 24 }),
+                 reproduceAt: 160, reproduceCost: 110, maxAge: 5000, start: 4, min: 1, cap: 24,
+                 habitat: [B.ROCK] }),
 };
 
 // derived lookups
