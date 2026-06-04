@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindBox — a world of tiny AI minds</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>🧠 MindBox</h1>
+      <p>A WorldBox-style sandbox where <b>every creature is its own neural-net AI</b>.
+         Grazers learn to find food and flee; hunters learn to chase. Nobody
+         programmed them — they <b>evolve</b>. You're the god: shape the land and
+         throw disasters.</p>
+    </header>
+
+    <div class="game">
+      <div class="toolbar">
+        <div class="group">
+          <span class="ghd">View</span>
+          <button data-tool="hand" title="Pan (or right-drag anywhere)">✋ Move</button>
+        </div>
+        <div class="group">
+          <span class="ghd">Terrain</span>
+          <button data-tool="land">⛰ Land</button>
+          <button data-tool="water">🌊 Water</button>
+          <button data-tool="mountain">🏔 Mtn</button>
+          <button data-tool="forest">🌲 Forest</button>
+          <button data-tool="grass">🌿 Grass</button>
+          <button data-tool="sand">🏜 Sand</button>
+        </div>
+        <div class="group">
+          <span class="ghd">Life</span>
+          <button data-tool="grazer">🐑 Grazer</button>
+          <button data-tool="hunter">🐺 Hunter</button>
+          <button data-tool="smite">💀 Smite</button>
+        </div>
+        <div class="group">
+          <span class="ghd">Disasters</span>
+          <button data-tool="meteor">☄️ Meteor</button>
+          <button data-tool="fire">🔥 Fire</button>
+          <button data-tool="lightning">⚡ Bolt</button>
+          <button data-tool="bomb">💣 Bomb</button>
+        </div>
+        <div class="group">
+          <label>Brush <i id="val-brush"></i></label>
+          <input id="slider-brush" type="range" min="1" max="9" value="3" />
+        </div>
+      </div>
+
+      <canvas id="view"></canvas>
+
+      <aside class="panel">
+        <section class="row">
+          <button id="btn-play">⏸ Pause</button>
+          <button id="btn-reset">↻ New World</button>
+        </section>
+
+        <section class="stats">
+          <div><span>Tick</span><b id="stat-tick">0</b></div>
+          <div><span>🐑 Grazers</span><b id="stat-grazers">0</b></div>
+          <div><span>🐺 Hunters</span><b id="stat-hunters">0</b></div>
+          <div><span>Population</span><b id="stat-pop">0</b></div>
+          <div><span>Generation</span><b id="stat-gen">0</b></div>
+          <div><span>Oldest</span><b id="stat-oldest">0</b></div>
+          <div><span>Births</span><b id="stat-born">0</b></div>
+          <div><span>Deaths</span><b id="stat-died">0</b></div>
+        </section>
+
+        <section>
+          <label>Speed <i id="val-speed"></i></label>
+          <input id="slider-speed" type="range" min="1" max="20" value="3" />
+          <label>Food growth <i id="val-food"></i></label>
+          <input id="slider-food" type="range" min="1" max="40" value="12" />
+          <label>Mutation % <i id="val-mut"></i></label>
+          <input id="slider-mut" type="range" min="0" max="50" value="12" />
+        </section>
+
+        <section class="hint">
+          <p><b>Scroll</b> to zoom, <b>right-drag</b> to pan. Each creature's color
+             is inherited by its children — when one color floods the map, that
+             family's brain is winning. Watch grazer/hunter counts rise and fall:
+             that's a living food chain that nobody scripted.</p>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script src="src/config.js"></script>
+  <script src="src/noise.js"></script>
+  <script src="src/brain.js"></script>
+  <script src="src/world.js"></script>
+  <script src="src/creature.js"></script>
+  <script src="src/sim.js"></script>
+  <script src="src/render.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
