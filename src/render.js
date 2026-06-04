@@ -111,30 +111,34 @@ class Renderer {
       }
     }
 
-    // creatures
+    // creatures — actual emoji when zoomed in, colored dots when zoomed out
+    const drawEmoji = s >= 11;
+    if (drawEmoji) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; }
     for (const c of sim.creatures) {
       if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
       const px = (c.x - this.cam.x) * s + s / 2;
       const py = (c.y - this.cam.y) * s + s / 2;
+      if (drawEmoji) {
+        ctx.font = `${(s * Math.min(1.6, c.size) * 1.05) | 0}px serif`;
+        ctx.fillText(c.def.emoji, px, py + 1);
+        continue;
+      }
       const light = 42 + Math.min(34, (c.energy / c.maxE) * 34);
-      const sz = Math.min(1.45, c.size);
+      const sz = Math.min(1.5, c.size);
+      const meat = c.def.diet !== 'plant';
       if (s < 3) {
         ctx.fillStyle = `hsl(${c.hue | 0},80%,${light}%)`;
         ctx.fillRect(px - s / 2, py - s / 2, Math.ceil(s), Math.ceil(s));
-      } else if (c.species === 'hunter') {
-        ctx.fillStyle = `hsl(${c.hue | 0},85%,${light}%)`;
-        ctx.beginPath();
-        ctx.arc(px, py, s * 0.62 * sz, 0, 6.283);
-        ctx.fill();
-        ctx.lineWidth = Math.max(1, s * 0.16);
-        ctx.strokeStyle = '#3a0d0d';
-        ctx.stroke();
       } else {
-        ctx.fillStyle = `hsl(${c.hue | 0},72%,${light}%)`;
+        ctx.fillStyle = `hsl(${c.hue | 0},${meat ? 85 : 70}%,${light}%)`;
         ctx.beginPath();
-        ctx.arc(px, py, s * 0.5 * sz, 0, 6.283);
+        ctx.arc(px, py, s * (meat ? 0.6 : 0.5) * sz, 0, 6.283);
         ctx.fill();
-        if (s >= 4) { ctx.lineWidth = Math.max(1, s * 0.12); ctx.strokeStyle = 'rgba(8,18,12,0.7)'; ctx.stroke(); }
+        if (s >= 4 && meat) {
+          ctx.lineWidth = Math.max(1, s * 0.14);
+          ctx.strokeStyle = 'rgba(20,4,4,0.7)';
+          ctx.stroke();
+        }
       }
     }
 

@@ -62,9 +62,8 @@ function updateInspector() {
     document.getElementById('brain').getContext('2d').clearRect(0, 0, 248, 150);
     return;
   }
-  const sp = sel.species === 'hunter' ? '🐺 Hunter' : '🐑 Grazer';
-  info.innerHTML = `${sp} &nbsp;·&nbsp; generation <b>${sel.generation}</b><br>` +
-    `energy ${sel.energy.toFixed(0)} &nbsp;·&nbsp; age ${sel.age}`;
+  info.innerHTML = `${sel.def.emoji} <b>${sel.def.name}</b> &nbsp;·&nbsp; gen ${sel.generation}<br>` +
+    `energy ${sel.energy.toFixed(0)} &nbsp;·&nbsp; age ${sel.age} &nbsp;·&nbsp; size ${sel.size.toFixed(2)}`;
   drawBrain(sel);
 }
 
@@ -117,14 +116,28 @@ function updateHUD() {
   const s = sim.stats();
   set('stat-tick', s.tick);
   set('stat-pop', s.pop);
-  set('stat-grazers', s.grazers);
-  set('stat-hunters', s.hunters);
   set('stat-gen', s.maxGen);
   set('stat-size', s.avgSize.toFixed(2));
   set('stat-vision', s.avgVision.toFixed(1));
   set('stat-oldest', s.oldest);
   set('stat-born', s.born);
   set('stat-died', s.died);
+  renderCensus(s.census);
+}
+
+function renderCensus(census) {
+  const rows = SPECIES_LIST
+    .map(d => ({ d, n: census[d.key] || 0 }))
+    .sort((a, b) => b.n - a.n);
+  document.getElementById('census').innerHTML = rows.map(r =>
+    `<span class="cspecies${r.n ? '' : ' zero'}" title="${r.d.name}">${r.d.emoji} ${r.n}</span>`
+  ).join('');
+}
+
+function buildPalette() {
+  document.getElementById('species-palette').innerHTML = SPECIES_LIST.map(d =>
+    `<button class="spbtn" data-tool="spawn:${d.key}" title="Spawn ${d.name}">${d.emoji}</button>`
+  ).join('');
 }
 function set(id, v) { document.getElementById(id).textContent = v; }
 
@@ -136,6 +149,7 @@ function flashBtn(id, text) {
 }
 
 function setupUI() {
+  buildPalette();   // must run before we wire [data-tool] buttons
   const playBtn = document.getElementById('btn-play');
   playBtn.onclick = () => { playing = !playing; playBtn.textContent = playing ? '⏸ Pause' : '▶ Play'; };
   document.getElementById('btn-reset').onclick = () => sim.reset();
@@ -189,8 +203,7 @@ function setupCanvas() {
     if (!sim.world.inBounds(tx, ty)) return;
     if (TERRAIN[tool]) sim.world.terraform(tx, ty, brush, TERRAIN[tool]);
     else if (tool === 'fire') sim.fireTool(tx, ty, Math.min(brush, 2));
-    else if (tool === 'grazer') sim.spawnAt('grazer', tx, ty);
-    else if (tool === 'hunter') sim.spawnAt('hunter', tx, ty);
+    else if (tool.startsWith('spawn:')) sim.spawnAt(tool.slice(6), tx, ty);
     else if (tool === 'smite') sim.smite(tx, ty, brush);
     else if (tool === 'inspect') { sim.selectAt(tx, ty); if (sim.selected) following = true; }
     else if (isDown && ONESHOT.has(tool)) sim[tool](tx, ty);

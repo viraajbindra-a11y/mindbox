@@ -13,6 +13,8 @@ function fertilityOf(b) {
   if (b === B.GRASS) return 0.95;
   if (b === B.FOREST) return 0.72;
   if (b === B.SAVANNA) return 0.30;
+  if (b === B.SHALLOW) return 0.22;   // plankton — food for fish
+  if (b === B.DEEP) return 0.12;
   if (b === B.SAND) return 0.06;
   return 0;
 }

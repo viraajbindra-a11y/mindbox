@@ -1,32 +1,41 @@
-// creature.js — one AI agent.
-// Two species, both fully driven by their own neural-net brain:
-//   • grazer  — eats plants, must learn to find food AND flee hunters
-//   • hunter  — eats grazers, must learn to chase them down
-// Nothing is scripted. Good brains survive, reproduce, and spread (evolution).
+// creature.js — one AI agent of any species.
+// Its species "model" (from species.js) sets its body and diet; its own
+// neural-net brain makes every decision. Each tick it senses, thinks, moves,
+// eats (plants and/or prey), and — when well-fed — breeds a mutated child.
+// Nothing is scripted: smart behavior has to be evolved.
 
 class Creature {
   constructor(species, x, y, energy, brain, hue, generation, size, vision) {
-    this.species = species;        // 'grazer' | 'hunter'
-    this.x = x;
-    this.y = y;
+    this.species = species;          // a key into SPECIES
+    this.def = SPECIES[species];
+    this.x = x; this.y = y;
     this.energy = energy;
     this.brain = brain;
-    this.hue = hue;
+    this.hue = hue;                  // lineage color (drifts around def.hue)
     this.generation = generation;
-    // evolvable body genes (mutate across generations, affect the sim):
-    this.size = size || 1;         // bigger = more max energy but costs more
-    this.vision = vision || CONFIG.visionRadius; // farther sight, smarter foraging
-    this.maxE = CONFIG.maxEnergy * this.size;
+    this.size = size || this.def.size;
+    this.vision = vision || this.def.vision;
+    this.maxE = this.def.maxEnergy * this.size;
     this.age = 0;
     this.alive = true;
   }
 
-  // Look around: build the 14 numbers the brain reads.
+  enterable(world, x, y) {
+    if (!world.inBounds(x, y)) return false;
+    const d = this.def.domain;
+    if (d === 'air') return true;            // flies over land and water
+    const water = world.isWater(x, y);
+    return d === 'water' ? water : !water;   // water-only vs land-only
+  }
+
+  // 14 senses: own state, nearest plant / prey / threat directions, crowding.
   sense(world, sim) {
     const R = this.vision;
-    let plDx = 0, plDy = 0, plMag = 0;   // plants (food for grazers)
-    let prDx = 0, prDy = 0, prMag = 0;   // prey (food for hunters)
-    let thDx = 0, thDy = 0, thMag = 0;   // threats (things that eat me)
+    const eatsPlant = this.def.diet !== 'meat';
+    const preds = PREDATORS_OF[this.species];
+    let plDx = 0, plDy = 0, plMag = 0;
+    let prDx = 0, prDy = 0, prMag = 0;
+    let thDx = 0, thDy = 0, thMag = 0;
     let crowd = 0;
 
     for (let dy = -R; dy <= R; dy++) {
@@ -39,15 +48,16 @@ class Creature {
         const inv = 1 / Math.sqrt(d2);
         const i = world.idx(x, y);
 
-        const food = world.food[i];
-        if (food > 0) { plDx += dx * inv * food; plDy += dy * inv * food; plMag += food; }
-
-        const other = sim.grid[i];
-        if (other) {
-          if (other.species === this.species) crowd++;
-          else if (this.species === 'hunter') {     // a grazer = prey
+        if (eatsPlant) {
+          const food = world.food[i];
+          if (food > 0) { plDx += dx * inv * food; plDy += dy * inv * food; plMag += food; }
+        }
+        const o = sim.grid[i];
+        if (o) {
+          if (o.species === this.species) crowd++;
+          else if (this.def.eatsSet.has(o.species) && canHunt(this, o)) {
             prDx += dx * inv; prDy += dy * inv; prMag++;
-          } else {                                   // a hunter = threat
+          } else if (preds.has(o.species)) {
             thDx += dx * inv; thDy += dy * inv; thMag++;
           }
         }
@@ -58,7 +68,7 @@ class Creature {
     const thL = Math.hypot(thDx, thDy) || 1;
     return [
       Math.min(1, this.energy / this.maxE),
-      Math.min(1, this.age / CONFIG.maxAge),
+      Math.min(1, this.age / this.def.maxAge),
       plDx / plL, plDy / plL, Math.min(1, plMag / 6),
       prDx / prL, prDy / prL, Math.min(1, prMag / 4),
       thDx / thL, thDy / thL, Math.min(1, thMag / 4),
@@ -70,53 +80,45 @@ class Creature {
   step(world, sim) {
     if (!this.alive) return null;
     const out = this.brain.forward(this.sense(world, sim));
-    // outputs: 0=up 1=down 2=left 3=right 4=reproduce (unused — see below)
 
-    // Try the brain's preferred directions in order. Falling back to the next
-    // choice when blocked lets creatures flow around each other instead of
-    // jamming into frozen clumps.
+    // move toward the brain's preferred open direction (fall back if blocked)
     const DX = [0, 0, -1, 1], DY = [-1, 1, 0, 0];
     const order = [0, 1, 2, 3].sort((a, b) => out[b] - out[a]);
     for (const d of order) {
       const nx = this.x + DX[d], ny = this.y + DY[d];
-      if (world.walkable(nx, ny) && !sim.grid[world.idx(nx, ny)]) {
+      if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
         this.moveTo(sim, nx, ny);
         this.energy -= CONFIG.moveCost;
         break;
       }
     }
 
-    if (this.species === 'grazer') {
-      // graze the plants on this tile
+    // eat plants on this tile (if it's a plant-eater)
+    if (this.def.diet !== 'meat') {
       const got = world.eat(this.x, this.y);
-      if (got > 0) this.energy = Math.min(this.maxE, this.energy + got * CONFIG.foodValue);
-    } else {
-      // hunters bite one adjacent grazer per tick
+      if (got > 0) this.energy = Math.min(this.maxE, this.energy + got * this.def.foodValue);
+    }
+    // bite one adjacent prey (if it's a meat-eater)
+    if (this.def.diet !== 'plant') {
       const N = [[-1, 0], [1, 0], [0, -1], [0, 1]];
       for (const [dx, dy] of N) {
         const ax = this.x + dx, ay = this.y + dy;
         if (!world.inBounds(ax, ay)) continue;
         const prey = sim.grid[world.idx(ax, ay)];
-        // a bigger grazer can resist a smaller hunter → a size arms race
-        if (prey && prey.species === 'grazer' && this.size + 0.15 >= prey.size) {
+        if (prey && this.def.eatsSet.has(prey.species) && canHunt(this, prey)) {
           sim.kill(prey);
-          this.energy = Math.min(this.maxE, this.energy + CONFIG.preyEnergy);
+          this.energy = Math.min(this.maxE, this.energy + this.def.preyEnergy);
           break;
         }
       }
     }
 
-    // cost of living — bigger bodies burn more
-    const meta = (this.species === 'hunter' ? CONFIG.hunterMetabolism : CONFIG.metabolism) * this.size;
+    const meta = this.def.metabolism * this.size;
     this.energy -= meta;
     this.age++;
-    if (this.energy <= 0 || this.age > CONFIG.maxAge) { sim.kill(this); return null; }
+    if (this.energy <= 0 || this.age > this.def.maxAge) { sim.kill(this); return null; }
 
-    // Reproduce when well-fed. (Gating this on a brain output stalled
-    // evolution — nothing was ever born, so there was no selection. The real
-    // skill under selection is GATHERING the energy: foraging, fleeing, and
-    // hunting, all of which the brain fully controls.)
-    if (this.energy > CONFIG.reproduceThreshold * this.size && sim.canReproduce(this.species)) {
+    if (this.energy > this.def.reproduceAt * this.size && sim.canReproduce(this.species)) {
       return this.reproduce(world, sim);
     }
     return null;
@@ -124,8 +126,7 @@ class Creature {
 
   moveTo(sim, nx, ny) {
     sim.grid[sim.world.idx(this.x, this.y)] = null;
-    this.x = nx;
-    this.y = ny;
+    this.x = nx; this.y = ny;
     sim.grid[sim.world.idx(nx, ny)] = this;
   }
 
@@ -137,18 +138,16 @@ class Creature {
     }
     for (const [dx, dy] of spots) {
       const x = this.x + dx, y = this.y + dy;
-      if (world.walkable(x, y) && !sim.grid[world.idx(x, y)]) {
+      if (this.enterable(world, x, y) && !sim.grid[world.idx(x, y)]) {
         const brain = this.brain.clone();
         brain.mutate(CONFIG.mutationRate, CONFIG.mutationAmount);
-        const cost = CONFIG.reproduceCost * this.size;
-        this.energy -= cost;
+        this.energy -= this.def.reproduceCost * this.size;
         const hue = (this.hue + (Math.random() * 2 - 1) * CONFIG.hueDrift + 360) % 360;
-        // mutate the body genes too
-        const size = Math.max(0.7, Math.min(1.5, this.size + randn() * 0.06));
+        const size = Math.max(0.6, Math.min(1.7, this.size + randn() * 0.06));
         let vision = this.vision;
         if (Math.random() < CONFIG.mutationRate) vision += Math.random() < 0.5 ? -1 : 1;
-        vision = Math.max(3, Math.min(7, vision));
-        const child = new Creature(this.species, x, y, cost * 0.7,
+        vision = Math.max(3, Math.min(8, vision));
+        const child = new Creature(this.species, x, y, this.def.reproduceCost * this.size * 0.7,
                                    brain, hue, this.generation + 1, size, vision);
         sim.grid[world.idx(x, y)] = child;
         return child;
