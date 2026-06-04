@@ -16,9 +16,13 @@ You play the god: shape the land, grow forests, and hurl meteors.
 
 - **Biome world** — oceans, beaches, grassland, forest, savanna, mountains, and
   snow, generated from elevation + moisture noise into a continent.
-- **Two species, both pure AI:**
-  - 🐑 **Grazers** eat plants and must learn to find food *and* flee.
-  - 🐺 **Hunters** eat grazers and must learn to chase.
+- **27 species, each its own model** (in `src/species.js`): herbivores (sheep,
+  rabbit, deer, cow, chicken, penguin, mammoth), carnivores (wolf, fox, lion,
+  snake), omnivores (bear, boar), aquatic life (fish, shark, crab, whale,
+  octopus), the four kingdoms (human, elf, dwarf, orc) — who go to **war** with
+  each other — and monsters (slime, skeleton, demon, golem, and a flying 🐉
+  **dragon** apex). Each has its own diet, habitat, body, and evolving brain.
+  Adding a new creature is a single table row.
 - **Evolution, not scripting.** When a creature is well-fed it reproduces; the
   child copies its brain with small **mutations**. Better brains survive and
   spread. A creature's **color** is inherited, so you can watch winning families
@@ -35,7 +39,7 @@ You play the god: shape the land, grow forests, and hurl meteors.
 |---|---|
 | **Move** | pan the camera (or right-drag anywhere; scroll to zoom) |
 | **Terrain** | brush land, water, mountains, forest, grass, sand |
-| **Life** | spawn 🐑/🐺, 💀 smite an area, or 🔍 **Inspect** a creature |
+| **Life** | pick any of 27 species to spawn, 💀 smite an area, or 🔍 **Inspect** a creature |
 | **Disasters** | ☄️ meteor, 🔥 spreading fire, ⚡ lightning, 💣 bomb |
 | **Brush** | size of the terrain/disaster brush |
 
