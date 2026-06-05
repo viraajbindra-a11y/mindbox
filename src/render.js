@@ -145,6 +145,19 @@ class Renderer {
       }
     }
 
+    // kingdom territory tint
+    if (Kingdoms.territory) {
+      const terr = Kingdoms.territory;
+      ctx.globalAlpha = 0.2;
+      for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+        const id = terr[ty * W + tx]; if (!id) continue;
+        const col = Kingdoms.colorOf(id); if (!col) continue;
+        ctx.fillStyle = col;
+        ctx.fillRect((tx - this.cam.x) * s, (ty - this.cam.y) * s, size, size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
     // structures (under creatures)
     for (const st of sim.structs) {
       const def = BUILD_DEFS[st.di]; if (!def) continue;
@@ -200,6 +213,20 @@ class Renderer {
     if (sky[3] > 0.003) {
       ctx.fillStyle = `rgba(${sky[0] | 0},${sky[1] | 0},${sky[2] | 0},${sky[3].toFixed(3)})`;
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    // kingdom capital markers + names (on top so they stay readable at night)
+    if (s >= 4 && Kingdoms.list.length) {
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = `bold ${Math.min(15, Math.max(9, s * 0.85)) | 0}px sans-serif`;
+      for (const k of Kingdoms.list) {
+        if (k.cx < x0 - 2 || k.cx > x1 + 2 || k.cy < y0 - 2 || k.cy > y1 + 2) continue;
+        const px = (k.cx - this.cam.x) * s + s / 2, py = (k.cy - this.cam.y) * s + s / 2;
+        ctx.fillStyle = k.color;
+        ctx.beginPath(); ctx.moveTo(px, py - s * 0.7); ctx.lineTo(px - s * 0.45, py); ctx.lineTo(px + s * 0.45, py); ctx.closePath(); ctx.fill(); // little banner
+        ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillText(k.name, px + 1, py - s - 4 + 1);
+        ctx.fillStyle = k.color; ctx.fillText(k.name, px, py - s - 4);
+      }
     }
   }
 }

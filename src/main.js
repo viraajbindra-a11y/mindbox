@@ -130,6 +130,22 @@ function updateHUD() {
   set('stat-structs', s.structs);
   renderCensus(s.census);
   renderBuilds(s.structCensus);
+  renderKingdoms();
+}
+
+function renderKingdoms() {
+  const sec = document.getElementById('kingdoms-sec');
+  const list = Kingdoms.list.slice().sort((a, b) => b.pop - a.pop).slice(0, 8);
+  if (!list.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  document.getElementById('kingdom-count').textContent = '(' + Kingdoms.list.length + ')';
+  const SP = { human: '🧑', elf: '🧝', dwarf: '🧔', orc: '👹' };
+  document.getElementById('kingdoms').innerHTML = list.map(k => {
+    const wars = Object.keys(k.relations).filter(id => k.relations[id] === 'war' && Kingdoms.byId[id]).map(id => Kingdoms.byId[id].name);
+    return `<div class="krow"><span class="ksw" style="background:${k.color}"></span>` +
+      `<b>${SP[k.species] || ''} ${k.name}</b><span class="kpop"> ·${k.pop}</span>` +
+      (wars.length ? `<span class="kwar"> ⚔ ${wars.slice(0, 2).join(', ')}</span>` : '') + `</div>`;
+  }).join('');
 }
 
 function renderBuilds(sc) {

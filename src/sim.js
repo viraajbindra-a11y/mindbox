@@ -31,6 +31,7 @@ class Simulation {
     this.history = [];
     this.selected = null;
     this.structs = [];
+    Kingdoms.init(this);
     this.seed();
   }
 
@@ -49,6 +50,7 @@ class Simulation {
     this.history = [];
     this.selected = null;
     this.structs = [];
+    Kingdoms.init(this);
     this.seed();
   }
 
@@ -161,6 +163,7 @@ class Simulation {
     this.rebuildGrid();
     this.updateFire();
     if (this.tickCount % 2 === 0) this.applyStructures();
+    if (this.tickCount % 120 === 0) Kingdoms.update(this);
 
     this.counts = {};
     for (const c of this.creatures) this.counts[c.species] = (this.counts[c.species] || 0) + 1;
