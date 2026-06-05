@@ -15,7 +15,7 @@ const Kingdoms = {
   territory: null,
   _dist: null,
   clusterRadius: 13,
-  minCity: 4,
+  minCity: 6,        // people needed to FOUND a new realm (survival needs only 3 — hysteresis)
 
   init(sim) {
     this.list = []; this.byId = {}; this.nextId = 1;
@@ -31,19 +31,31 @@ const Kingdoms = {
 
   update(sim) {
     if (!this.territory) this.init(sim);
-    const clusters = this._cluster(sim);
-    const used = new Set();
+    // 1) existing kingdoms PERSIST: each claims the nearby kin around its capital and
+    //    anchors there. Surviving (just 3 people) is far easier than founding a new realm
+    //    (minCity), and a realm gets a grace period before it falls — this hysteresis is
+    //    what stops kingdoms blinking in and out (and jumping the map) as people wander.
+    const claimed = new Set();
     const next = [];
-    for (const c of clusters) {
-      let best = null, bestD = 26 * 26;
-      for (const k of this.list) {
-        if (used.has(k.id) || k.species !== c.species) continue;
-        const d = (k.cx - c.cx) ** 2 + (k.cy - c.cy) ** 2;
-        if (d < bestD) { bestD = d; best = k; }
+    const CLAIM2 = 18 * 18;
+    for (const k of this.list) {
+      let sx = 0, sy = 0, n = 0;
+      for (const p of sim.creatures) {
+        if (!p.def.builder || p.species !== k.species || claimed.has(p)) continue;
+        if ((p.x - k.cx) ** 2 + (p.y - k.cy) ** 2 <= CLAIM2) { sx += p.x; sy += p.y; n++; claimed.add(p); }
       }
-      if (best) { best.cx = c.cx; best.cy = c.cy; best.pop = c.pop; best.age++; used.add(best.id); next.push(best); }
-      else next.push(this._found(c));
+      if (n >= 3) {
+        k.cx += Math.round((sx / n - k.cx) * 0.1);   // capital drifts slowly toward its people (anchored)
+        k.cy += Math.round((sy / n - k.cy) * 0.1);
+        k.pop = n; k.age++; k.miss = 0; next.push(k);
+      } else if ((k.miss = (k.miss || 0) + 1) <= 5) {
+        k.pop = n; next.push(k);                       // grace period: don't vanish on a few bad updates
+      } else {
+        this.log(`🏚 ${k.name} faded into history`);
+      }
     }
+    // 2) found brand-new kingdoms only from people no existing realm claimed
+    for (const c of this._cluster(sim, claimed)) next.push(this._found(c));
     this.list = next;
     this.byId = {};
     for (const k of this.list) this.byId[k.id] = k;
@@ -142,11 +154,12 @@ const Kingdoms = {
     this.log(`⚔ ${winner ? winner.name : 'Rebels'} conquered ${loser.name}`);
   },
 
-  _cluster(sim) {
+  _cluster(sim, claimed) {
     const clusters = [];
     const R2 = this.clusterRadius * this.clusterRadius;
     for (const p of sim.creatures) {
       if (!p.def.builder) continue;
+      if (claimed && claimed.has(p)) continue;          // people an existing realm already holds
       let found = null;
       for (const cl of clusters) {
         if (cl.species !== p.species) continue;
