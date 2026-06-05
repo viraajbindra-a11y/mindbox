@@ -62,8 +62,24 @@ const Kingdoms = {
     this._relations();
     this._rebellion(sim);
     this._allianceWars();
+    this._trade();
     this._territory(sim);
     this._war(sim);
+  },
+
+  // trade routes: allied or peaceful capitals within reach trade with each other.
+  // (Visual on the map; Meta turns each partner into prosperity → faster tech.)
+  _trade() {
+    const routes = [];
+    const R2 = 48 * 48;
+    for (let i = 0; i < this.list.length; i++)
+      for (let j = i + 1; j < this.list.length; j++) {
+        const a = this.list[i], b = this.list[j], rel = a.relations[b.id];
+        if (rel !== 'ally' && rel !== 'peace') continue;
+        if ((a.cx - b.cx) ** 2 + (a.cy - b.cy) ** 2 > R2) continue;
+        routes.push([a.id, b.id]);
+      }
+    this.tradeRoutes = routes;
   },
 
   // allies are dragged into each other's wars (one hop per update) — this is what

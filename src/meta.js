@@ -72,9 +72,13 @@ const Meta = {
       }
     }
 
+    // trade partners add prosperity — well-connected realms (and faith blocs) advance faster
+    const tradeCount = {};
+    for (const r of (Kingdoms.tradeRoutes || [])) { tradeCount[r[0]] = (tradeCount[r[0]] || 0) + 1; tradeCount[r[1]] = (tradeCount[r[1]] || 0) + 1; }
+
     // advance technology ages
     for (const k of ks) {
-      const score = (k.pop || 0) + 2 * (structOwner[k.id] || 0) + Math.floor((k.age || 0) / 30) + 3 * (k.conquests || 0);
+      const score = (k.pop || 0) + 2 * (structOwner[k.id] || 0) + Math.floor((k.age || 0) / 30) + 3 * (k.conquests || 0) + 2 * (tradeCount[k.id] || 0);
       let t = k.tech || 0;
       while (t < AGES.length - 1 && score >= AGES[t + 1].need) {
         t++;

@@ -197,6 +197,24 @@ class Renderer {
       ctx.globalAlpha = 1;
     }
 
+    // trade routes — gold dashed lines between allied / peaceful capitals
+    if (Kingdoms.tradeRoutes && Kingdoms.tradeRoutes.length && s >= 2) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(232,201,90,0.5)';
+      ctx.lineWidth = Math.max(1, s * 0.1);
+      const dash = Math.max(2, s * 0.5);
+      ctx.setLineDash([dash, dash]);
+      for (const route of Kingdoms.tradeRoutes) {
+        const a = Kingdoms.byId[route[0]], b = Kingdoms.byId[route[1]];
+        if (!a || !b) continue;
+        ctx.beginPath();
+        ctx.moveTo((a.cx - this.cam.x) * s + s / 2, (a.cy - this.cam.y) * s + s / 2);
+        ctx.lineTo((b.cx - this.cam.x) * s + s / 2, (b.cy - this.cam.y) * s + s / 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     // structures (under creatures)
     for (const st of sim.structs) {
       const def = BUILD_DEFS[st.di]; if (!def) continue;
