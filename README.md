@@ -15,6 +15,35 @@ You play the god: shape the land, grow forests, and hurl meteors.
 
 (or serve it: `python3 -m http.server 8000` then visit `http://localhost:8000`)
 
+## AI crafting with a local LLM (Ollama)
+
+The world can use a **local large language model** for real *Infinite-Craft-style*
+invention — combine two things and the model makes up the result. It all runs on
+your own machine; nothing goes to the cloud.
+
+**Desktop app (recommended) — bundles & manages the AI for you:**
+
+```bash
+npm install      # one time
+npm start        # launches the MindBox app
+```
+
+In the **🧪 AI Craft** panel: click **Install AI** (sets up Ollama), pick a model
+and click **Get** to download it, then combine items or flip on *"let the AI
+invent on its own."* **A bigger model = smarter agents = a better game** (the
+panel lists models from tiny/fast to big/smart). Build an installer with
+`npm run dist`.
+
+**Plain web page instead?** Run your own Ollama with the browser allowed in:
+
+```bash
+OLLAMA_ORIGINS=* ollama serve
+ollama pull llama3.2
+```
+
+No Ollama at all? The craft panel still works on a **built-in fallback** recipe
+table — just not endless.
+
 ## What makes it tick
 
 - **Biome world** — oceans, beaches, grassland, forest, savanna, mountains, and
@@ -76,8 +105,12 @@ Plain HTML + Canvas + JavaScript — no libraries, no build.
 | `src/creature.js` | one AI agent: sense → act → learn → breed |
 | `src/sim.js`      | runs time, immigration, disasters, save/load |
 | `src/sprites.js`  | procedurally-drawn animated animal models |
+| `src/structures.js` | the build/tech tree (recipes + building art) |
 | `src/render.js`   | pan/zoom camera, biomes, day/night sky, seasons |
-| `src/main.js`     | toolbar, census, graph, live brain viewer, main loop |
+| `src/ollama.js`   | talks to a local LLM (desktop bridge or web fetch) |
+| `src/craft.js`    | infinite-craft discovery (LLM invention + fallback) |
+| `src/main.js`     | toolbar, census, graph, live brain viewer, AI panel |
+| `electron/`       | desktop app: installs/runs Ollama, pulls models |
 
 ## Ideas for next
 
