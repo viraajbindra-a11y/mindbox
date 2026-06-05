@@ -195,6 +195,74 @@ function setupUI() {
   bindSlider('mut', v => { CONFIG.mutationRate = v / 100; });
 
   setupCanvas();
+  setupCraft();
+}
+
+function setupCraft() {
+  const $ = id => document.getElementById(id);
+  Craft.init();
+
+  const fillItems = () => {
+    const names = Object.keys(Craft.items).sort();
+    const opts = names.map(n => `<option value="${n}">${Craft.items[n].emoji} ${n}</option>`).join('');
+    const a = $('craft-a'), b = $('craft-b'), av = a.value, bv = b.value;
+    a.innerHTML = opts; b.innerHTML = opts;
+    if (names.includes(av)) a.value = av; if (names.includes(bv)) b.value = bv;
+    $('craft-count').textContent = '(' + Craft.count() + ')';
+  };
+  const renderLog = () => {
+    $('craft-log').innerHTML = Craft.log.slice(0, 14)
+      .map(e => `<span class="cspecies" title="${e.a} + ${e.b}">${e.emoji} ${e.r}</span>`).join('');
+  };
+  const msg = t => { $('ollama-msg').textContent = t || ''; };
+  fillItems(); renderLog();
+
+  const ms = $('ollama-model');
+  const fillModels = () => {
+    ms.innerHTML = OLLAMA_MODELS.map(m =>
+      `<option value="${m.name}">${m.label} — ${m.note}${Ollama.models.includes(m.name) ? ' ✓' : ''}</option>`).join('') +
+      Ollama.models.filter(m => !OLLAMA_MODELS.some(o => o.name === m))
+        .map(m => `<option value="${m}">${m} (installed)</option>`).join('');
+    ms.value = Ollama.model;
+  };
+  ms.onchange = () => Ollama.setModel(ms.value);
+
+  const refresh = () => {
+    $('ollama-dot').className = 'dot ' + (Ollama.online ? 'on' : 'off');
+    $('ollama-dot').title = Ollama.online ? 'AI online (' + Ollama.model + ')' : 'AI offline — using built-in fallback recipes';
+    $('btn-ollama-install').style.display = (Ollama.isDesktop() && !Ollama.installed) ? '' : 'none';
+    fillModels();
+  };
+  fillModels();
+  Ollama.check().then(refresh);
+
+  $('btn-ollama-connect').onclick = () => { msg('Checking…'); Ollama.check().then(() => { refresh();
+    msg(Ollama.online ? 'AI online ✓' : (Ollama.isDesktop() ? 'No AI yet — click Install AI.' : 'No Ollama found. Run:  OLLAMA_ORIGINS=* ollama serve')); }); };
+  $('btn-ollama-install').onclick = () => { msg('Installing the local AI… (first time can take a minute)');
+    Ollama.install(line => msg(line)).then(() => Ollama.check()).then(() => { refresh();
+      msg(Ollama.installed ? 'Installed ✓ — pick a model and click Get.' : 'Couldn’t auto-install — get it from ollama.com.'); })
+      .catch(e => msg('Install failed: ' + e.message)); };
+  $('btn-ollama-pull').onclick = () => { const m = ms.value; msg('Downloading ' + m + '…');
+    Ollama.pull(m, line => msg(line)).then(() => Ollama.check()).then(() => { Ollama.setModel(m); refresh(); msg('Ready: ' + m + ' ✓'); })
+      .catch(e => msg('Download failed: ' + e.message)); };
+
+  $('btn-combine').onclick = async () => {
+    const a = $('craft-a').value, b = $('craft-b').value;
+    if (!a || !b) return;
+    $('craft-result').textContent = '…';
+    const r = await Craft.combine(a, b);
+    if (r) $('craft-result').textContent = `${Craft.items[a].emoji} + ${Craft.items[b].emoji} = ${r.emoji} ${r.name}`;
+    fillItems(); renderLog();
+  };
+
+  let timer = null;
+  $('craft-auto').onchange = e => {
+    if (timer) { clearInterval(timer); timer = null; }
+    if (e.target.checked) timer = setInterval(async () => {
+      const r = await Craft.experiment();
+      if (r) { fillItems(); renderLog(); }
+    }, Ollama.online ? 3500 : 1400);
+  };
 }
 
 function bindSlider(id, apply, labelId) {

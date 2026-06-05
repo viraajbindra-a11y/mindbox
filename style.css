@@ -98,3 +98,15 @@ canvas.mini { width: 100%; display: block; background: #0e1320; border: 1px soli
 .census { display: flex; flex-wrap: wrap; gap: 5px 9px; font-size: 12px; }
 .cspecies { color: #c8d0de; white-space: nowrap; }
 .cspecies.zero { color: #46506180; opacity: 0.5; }
+
+.craft { background: #141925; border: 1px solid #2a3550; border-radius: 8px; padding: 12px; }
+.craft-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.craft-row { display: flex; gap: 5px; align-items: center; margin: 5px 0; }
+.craft-row > span { color: #8b95a7; }
+.craft-row select { flex: 1; min-width: 0; background: #1e2638; color: #d7dde8; border: 1px solid #2d384e; border-radius: 5px; padding: 5px; font: inherit; font-size: 11.5px; }
+.craft-row button { white-space: nowrap; padding: 6px 9px; font-size: 12px; }
+.dot { font-size: 13px; }
+.dot.off { color: #7a4a4a; }
+.dot.on { color: #5fd08a; }
+.craft-result { min-height: 20px; font-size: 14px; color: #e8c84a; margin: 6px 0; text-align: center; }
+.craft-auto { font-size: 12px; color: #9aa4b6; display: flex; gap: 6px; align-items: center; margin: 8px 0 6px; }

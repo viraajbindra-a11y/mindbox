@@ -1,0 +1,26 @@
+{
+  "name": "mindbox",
+  "productName": "MindBox",
+  "version": "0.1.0",
+  "description": "A WorldBox-style sandbox where every creature is a learning AI agent. Bundles a local LLM (Ollama) so agents can invent things, infinite-craft style. Better model = smarter game.",
+  "author": "viraajbindra-a11y",
+  "license": "MIT",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "web": "python3 -m http.server 8765",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.mindbox.game",
+    "productName": "MindBox",
+    "files": ["index.html", "style.css", "src/**/*", "electron/**/*"],
+    "mac": { "category": "public.app-category.games", "target": ["dmg", "zip"] },
+    "win": { "target": ["nsis"] },
+    "linux": { "target": ["AppImage"] }
+  }
+}
