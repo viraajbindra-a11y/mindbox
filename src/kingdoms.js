@@ -48,8 +48,30 @@ const Kingdoms = {
     this.byId = {};
     for (const k of this.list) this.byId[k.id] = k;
     this._relations();
+    this._rebellion(sim);
     this._territory(sim);
     this._war(sim);
+  },
+
+  // REBELLION: a large, far-flung realm can fracture — a distant province breaks
+  // away as a new kingdom and declares independence (civil war). The breakaway
+  // founds its capital where its people already stand, so territory swings to it.
+  _rebellion(sim) {
+    for (const k of this.list.slice()) {
+      if (this.list.length >= 16) break;          // keep the world legible
+      if ((k.pop || 0) < 36 || k.age < 6) continue;
+      if (Math.random() > 0.03) continue;          // rare, dramatic
+      const mine = sim.creatures.filter(c => c.kingdomId === k.id);
+      if (mine.length < 12) continue;
+      mine.sort((a, b) => ((b.x - k.cx) ** 2 + (b.y - k.cy) ** 2) - ((a.x - k.cx) ** 2 + (a.y - k.cy) ** 2));
+      const lead = mine[0];
+      if ((lead.x - k.cx) ** 2 + (lead.y - k.cy) ** 2 < 13 * 13) continue;  // needs to be spread out
+      const rebel = this._found({ species: k.species, cx: lead.x, cy: lead.y, pop: Math.max(4, Math.floor(k.pop / 3)) });
+      rebel.relations[k.id] = 'war'; k.relations[rebel.id] = 'war';
+      rebel.born = 'rebellion';
+      this.list.push(rebel); this.byId[rebel.id] = rebel;
+      this.log(`🔥 ${rebel.name} broke away from ${k.name} and declared independence`);
+    }
   },
 
   // armies, sieges, and conquest
