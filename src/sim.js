@@ -282,6 +282,42 @@ class Simulation {
   summon(cx, cy) { for (let k = 0; k < 2; k++) this.spawnAt('dragon', cx + ((Math.random() * 7) | 0) - 3, cy + ((Math.random() * 7) | 0) - 3); }
   blessing(cx, cy, r = 6) { for (const c of this.creatures) if ((c.x - cx) ** 2 + (c.y - cy) ** 2 <= r * r) { c.energy = c.maxE; c.infected = 0; } }
 
+  tornado(cx, cy) {
+    const r = 5;
+    for (const c of this.creatures.slice()) {
+      if ((c.x - cx) ** 2 + (c.y - cy) ** 2 > r * r) continue;
+      c.energy -= 30;
+      const nx = cx + ((Math.random() * 15) | 0) - 7, ny = cy + ((Math.random() * 15) | 0) - 7;   // flung
+      if (this.world.walkable(nx, ny) && !this.grid[this.world.idx(nx, ny)]) c.moveTo(this, nx, ny);
+      if (c.energy <= 0) this.kill(c);
+    }
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++)
+      if (this.world.inBounds(x, y) && (x - cx) ** 2 + (y - cy) ** 2 <= r * r) this.world.tree[this.world.idx(x, y)] = 0;
+  }
+
+  volcano(cx, cy) {
+    const r = 5;
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+      if (!this.world.inBounds(x, y)) continue;
+      const d = (x - cx) ** 2 + (y - cy) ** 2; if (d > r * r) continue;
+      const i = this.world.idx(x, y);
+      if (this.grid[i]) this.kill(this.grid[i]);
+      if (d < (r * 0.45) ** 2) { this.world.elev[i] = 0.85; this.world.biome[i] = B.ROCK; this.world.tree[i] = 0; this.world.food[i] = 0; }
+      else this.ignite(i);
+    }
+  }
+
+  tsunami(cx, cy) {
+    const r = 7;
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+      if (!this.world.inBounds(x, y) || (x - cx) ** 2 + (y - cy) ** 2 > r * r) continue;
+      const i = this.world.idx(x, y);
+      if (this.grid[i]) this.kill(this.grid[i]);
+      this.world.elev[i] = 0.34; this.world.biome[i] = B.SHALLOW;
+      this.world.tree[i] = 0; this.world.food[i] = 0; this.world.fire[i] = 0;
+    }
+  }
+
   selectAt(tx, ty) {
     let best = null, bestD = 81;
     for (const c of this.creatures) {

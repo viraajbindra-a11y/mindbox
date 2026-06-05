@@ -7,7 +7,7 @@ const SPEEDS = [0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12, 16];   // Speed slider preset
 const TERRAIN = { land: 'raise', water: 'water', mountain: 'mountain',
                   forest: 'forest', grass: 'grass', sand: 'sand',
                   desert: 'desert', jungle: 'jungle', swamp: 'swamp', snow: 'snow', mushroom: 'mushroom' };
-const ONESHOT = new Set(['meteor', 'bomb', 'lightning']);
+const ONESHOT = new Set(['meteor', 'bomb', 'lightning', 'tornado', 'volcano', 'tsunami', 'plague', 'blessing', 'summon']);
 
 function init() {
   sim = new Simulation();
