@@ -7,22 +7,44 @@
 
 function fertilityOf(b) {
   if (b === B.GRASS) return 0.95;
+  if (b === B.JUNGLE) return 0.90;
   if (b === B.FOREST) return 0.72;
+  if (b === B.SWAMP) return 0.50;
+  if (b === B.TAIGA) return 0.50;
+  if (b === B.MUSHROOM) return 0.45;
   if (b === B.SAVANNA) return 0.30;
   if (b === B.SHALLOW) return 0.22;   // plankton — food for fish
+  if (b === B.TUNDRA) return 0.18;
   if (b === B.DEEP) return 0.12;
   if (b === B.SAND) return 0.06;
+  if (b === B.DESERT) return 0.04;
   return 0;
 }
-function flammableOf(b) { return b === B.GRASS || b === B.FOREST || b === B.SAVANNA; }
+function flammableOf(b) {
+  return b === B.GRASS || b === B.FOREST || b === B.SAVANNA || b === B.JUNGLE || b === B.TAIGA;
+}
+function treeProbOf(b) {
+  if (b === B.JUNGLE) return 0.88;
+  if (b === B.FOREST) return 0.70;
+  if (b === B.TAIGA) return 0.55;
+  if (b === B.SWAMP) return 0.25;
+  return 0;
+}
 
 function classifyBiome(e, m, temp) {
   if (e < 0.30) return B.DEEP;
   if (e < 0.385) return B.SHALLOW;
-  if (e < 0.42) return B.SAND;
+  if (e < 0.42) return B.SAND;                       // beach
+  if (e < 0.47 && m > 0.58) return B.SWAMP;          // wet coastal lowland
   if (e < 0.78) {
-    if (temp < 0.27) return B.SNOW;     // cold lowlands → snowy tundra
-    if (m < 0.30) return B.SAVANNA;     // dry
+    if (temp < 0.18) return B.SNOW;                  // frozen
+    if (temp < 0.34) return m > 0.5 ? B.TAIGA : B.TUNDRA;  // cold: pine forest vs tundra
+    if (temp > 0.72) {                               // hot
+      if (m < 0.26) return B.DESERT;
+      if (m > 0.64) return B.JUNGLE;
+      return B.SAVANNA;
+    }
+    if (m < 0.28) return B.SAVANNA;                  // temperate
     if (m < 0.58) return B.GRASS;
     return B.FOREST;
   }
@@ -78,7 +100,7 @@ class World {
         this.temp[i] = t;
         const b = classifyBiome(e, m, t);
         this.biome[i] = b;
-        this.tree[i] = b === B.FOREST && Math.random() < 0.7 ? 1 : 0;
+        this.tree[i] = Math.random() < treeProbOf(b) ? 1 : 0;
         this.food[i] = fertilityOf(b) * CONFIG.foodStart;
         if (b === B.ROCK && Math.random() < CONFIG.oreChance) this.ore[i] = Math.random() < 0.3 ? 2 : 1;
         else if ((b === B.GRASS || b === B.SAVANNA || b === B.SAND) && Math.random() < 0.02) this.ore[i] = 1;  // surface boulders → stone on the plains
@@ -90,7 +112,7 @@ class World {
   recompute(i) {
     const b = classifyBiome(this.elev[i], this.moist[i], this.temp[i]);
     this.biome[i] = b;
-    this.tree[i] = b === B.FOREST && Math.random() < 0.7 ? 1 : 0;
+    this.tree[i] = Math.random() < treeProbOf(b) ? 1 : 0;
     if (this.food[i] > fertilityOf(b)) this.food[i] = fertilityOf(b);
   }
 
@@ -124,6 +146,11 @@ class World {
           case 'forest':  this.elev[i] = 0.55; this.biome[i] = B.FOREST; this.tree[i] = 1; this.food[i] = Math.max(this.food[i], 0.4); break;
           case 'grass':   this.elev[i] = 0.50; this.biome[i] = B.GRASS; this.tree[i] = 0; this.food[i] = Math.max(this.food[i], 0.3); break;
           case 'sand':    this.elev[i] = 0.40; this.biome[i] = B.SAND; this.tree[i] = 0; this.food[i] = 0; break;
+          case 'desert':  this.elev[i] = 0.55; this.biome[i] = B.DESERT; this.tree[i] = 0; this.food[i] = 0; break;
+          case 'swamp':   this.elev[i] = 0.44; this.biome[i] = B.SWAMP; this.tree[i] = Math.random() < 0.25 ? 1 : 0; this.food[i] = Math.max(this.food[i], 0.3); break;
+          case 'jungle':  this.elev[i] = 0.58; this.biome[i] = B.JUNGLE; this.tree[i] = 1; this.food[i] = Math.max(this.food[i], 0.5); break;
+          case 'snow':    this.elev[i] = 0.58; this.biome[i] = B.SNOW; this.tree[i] = 0; this.food[i] = 0; break;
+          case 'mushroom': this.elev[i] = 0.52; this.biome[i] = B.MUSHROOM; this.tree[i] = 0; this.food[i] = Math.max(this.food[i], 0.3); break;
           case 'water':   this.elev[i] = 0.34; this.biome[i] = B.SHALLOW; this.tree[i] = 0; this.food[i] = 0; this.fire[i] = 0; break;
         }
       }

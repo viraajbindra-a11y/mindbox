@@ -10,7 +10,17 @@ const BIOME_COLOR = {
   [B.SAVANNA]: [184, 168, 96],
   [B.ROCK]:    [138, 134, 128],
   [B.SNOW]:    [232, 238, 242],
+  [B.SWAMP]:   [78, 96, 66],
+  [B.JUNGLE]:  [44, 112, 52],
+  [B.DESERT]:  [226, 198, 116],
+  [B.TUNDRA]:  [176, 186, 170],
+  [B.TAIGA]:   [70, 104, 84],
+  [B.MUSHROOM]:[122, 80, 150],
 };
+function isVeg(b) {
+  return b === B.GRASS || b === B.FOREST || b === B.SAVANNA || b === B.JUNGLE ||
+         b === B.SWAMP || b === B.TAIGA || b === B.TUNDRA || b === B.MUSHROOM;
+}
 
 // sky overlay keyframes over one day: [t, r, g, b, alpha]
 const SKY_KEYS = [
@@ -114,8 +124,8 @@ class Renderer {
         // shade by elevation for a little depth
         const shade = 0.82 + world.elev[i] * 0.32;
         r *= shade; g *= shade; bl *= shade;
-        // grass/forest get brighter with more food, then tinted by the season
-        if (b === B.GRASS || b === B.FOREST || b === B.SAVANNA) {
+        // vegetated tiles get brighter with more food, then tinted by the season
+        if (isVeg(b)) {
           g += world.food[i] * 45;
           r += (seasonTint[0] - r) * seasonStr;
           g += (seasonTint[1] - g) * seasonStr;
@@ -132,7 +142,7 @@ class Renderer {
         ctx.fillRect(px, py, size, size);
 
         if (drawTrees && world.tree[i] && fire <= 0) {
-          ctx.fillStyle = '#2f6b34';
+          ctx.fillStyle = b === B.TAIGA ? '#3a6b5a' : b === B.JUNGLE ? '#236a2c' : b === B.SWAMP ? '#49592f' : '#2f6b34';
           ctx.beginPath();
           ctx.arc(px + s / 2, py + s / 2, s * 0.34, 0, 6.283);
           ctx.fill();

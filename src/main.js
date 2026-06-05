@@ -3,7 +3,8 @@ let sim, renderer, playing = true, tool = 'hand', brush = 3, following = false;
 
 // which tools paint terrain (drag-paint) vs. fire one-shot disasters
 const TERRAIN = { land: 'raise', water: 'water', mountain: 'mountain',
-                  forest: 'forest', grass: 'grass', sand: 'sand' };
+                  forest: 'forest', grass: 'grass', sand: 'sand',
+                  desert: 'desert', jungle: 'jungle', swamp: 'swamp', snow: 'snow', mushroom: 'mushroom' };
 const ONESHOT = new Set(['meteor', 'bomb', 'lightning']);
 
 function init() {

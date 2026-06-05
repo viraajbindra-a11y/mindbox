@@ -4,6 +4,8 @@
 const B = {
   DEEP: 0, SHALLOW: 1, SAND: 2, GRASS: 3,
   FOREST: 4, SAVANNA: 5, ROCK: 6, SNOW: 7,
+  // WorldBox-style biomes:
+  SWAMP: 8, JUNGLE: 9, DESERT: 10, TUNDRA: 11, TAIGA: 12, MUSHROOM: 13,
 };
 
 const CONFIG = {
