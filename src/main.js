@@ -134,12 +134,11 @@ function updateHUD() {
 
 function renderBuilds(sc) {
   const sec = document.getElementById('builds-sec');
-  const total = STRUCTS.reduce((a, st) => a + (sc[st.key] || 0), 0);
-  if (!total) { sec.style.display = 'none'; return; }
+  const entries = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 16);
+  if (!entries.length) { sec.style.display = 'none'; return; }
   sec.style.display = 'block';
-  document.getElementById('builds').innerHTML = STRUCTS
-    .map(st => ({ st, n: sc[st.key] || 0 })).filter(r => r.n)
-    .map(r => `<span class="cspecies" title="${r.st.name}">${r.st.emoji} ${r.n}</span>`).join('');
+  document.getElementById('builds').innerHTML = entries
+    .map(([label, n]) => `<span class="cspecies">${label} ${n}</span>`).join('');
 }
 
 function renderCensus(census) {

@@ -52,40 +52,49 @@ class Simulation {
     this.seed();
   }
 
-  // --- structures ---
-  build(idx, id) {
+  // --- structures (LLM-generated from the resources poured in) ---
+  build(idx, resources) {
     if (this.world.struct[idx] >= 0) return;
-    this.world.struct[idx] = id;
-    this.structs.push({ idx, id });
+    const di = BuildGen.resolve(resources, (realDi) => {
+      // the model finished inventing — swap the construction site for the real building
+      if (this.world.struct[idx] === CONSTRUCTION_DI) this.world.struct[idx] = realDi;
+      const s = this.structs.find(s => s.idx === idx);
+      if (s) s.di = realDi;
+    });
+    this.world.struct[idx] = di;
+    this.structs.push({ idx, di });
   }
 
-  hasStructNear(cx, cy, key, R) {
-    const want = STRUCT_BY_KEY[key].id, W = this.world;
+  anyStructNear(cx, cy, R) {
+    const W = this.world;
     for (let y = cy - R; y <= cy + R; y++)
-      for (let x = cx - R; x <= cx + R; x++) {
-        if (W.inBounds(x, y) && W.struct[W.idx(x, y)] === want) return true;
-      }
+      for (let x = cx - R; x <= cx + R; x++)
+        if (W.inBounds(x, y) && W.struct[W.idx(x, y)] >= 0) return true;
     return false;
   }
 
-  // structure auras: farms grow food, huts heal kin, towers smite predators
+  // structure auras (by the building's effect): farms grow food, shelters heal
+  // kin, defenses smite predators
   applyStructures() {
     const W = this.world;
     for (const s of this.structs) {
-      const eff = STRUCTS[s.id].effect;
+      const def = BUILD_DEFS[s.di];
+      if (!def) continue;
+      const kind = effectKind(def.effect);
+      if (kind === 'none' || kind === 'wall') continue;
       const cx = s.idx % W.w, cy = (s.idx / W.w) | 0;
-      if (eff === 'farm') {
+      if (kind === 'food') {
         for (let y = cy - 2; y <= cy + 2; y++) for (let x = cx - 2; x <= cx + 2; x++) {
           if (!W.inBounds(x, y)) continue; const i = W.idx(x, y); const b = W.biome[i];
           if (b === B.GRASS || b === B.SAVANNA || b === B.FOREST) W.food[i] = Math.min(0.95, W.food[i] + CONFIG.farmFood);
         }
-      } else if (eff === 'heal' || eff === 'camp' || eff === 'monument') {
-        const R = eff === 'monument' ? 5 : 3;
+      } else if (kind === 'heal') {
+        const R = (def.effect === 'monument' || def.effect === 'wonder') ? 5 : 3;
         for (let y = cy - R; y <= cy + R; y++) for (let x = cx - R; x <= cx + R; x++) {
           if (!W.inBounds(x, y)) continue; const o = this.grid[W.idx(x, y)];
           if (o && o.def.builder) o.energy = Math.min(o.maxE, o.energy + 0.06);
         }
-      } else if (eff === 'tower') {
+      } else if (kind === 'damage') {
         for (let y = cy - 4; y <= cy + 4; y++) for (let x = cx - 4; x <= cx + 4; x++) {
           if (!W.inBounds(x, y)) continue; const o = this.grid[W.idx(x, y)];
           if (o && o.def.diet !== 'plant' && !o.def.builder) { o.energy -= 0.7; if (o.energy <= 0) this.kill(o); }
@@ -277,7 +286,8 @@ class Simulation {
       elev: bytesToB64(w.elev), moist: bytesToB64(w.moist),
       temp: bytesToB64(w.temp), food: bytesToB64(w.food),
       tick: this.tickCount, born: this.born, died: this.died,
-      structs: this.structs.map(s => [s.idx, s.id]),
+      structs: this.structs.map(s => [s.idx, s.di]),
+      build: BuildGen.save(),
       creatures: this.creatures.map(c => ({
         k: c.species, x: c.x, y: c.y, e: c.energy, h: c.hue, g: c.generation, a: c.age,
         sz: c.size, vi: c.vision,
@@ -297,8 +307,9 @@ class Simulation {
     w.food = b64ToF32(d.food);
     w.fire = new Float32Array(d.gw * d.gh);
     this.world = w;
-    this.structs = (d.structs || []).map(([idx, id]) => ({ idx, id }));
-    for (const s of this.structs) w.struct[s.idx] = s.id;
+    BuildGen.load(d.build);
+    this.structs = (d.structs || []).map(([idx, di]) => ({ idx, di }));
+    for (const s of this.structs) w.struct[s.idx] = s.di;
     this.creatures = d.creatures.filter(o => SPECIES[o.k]).map(o => {
       const brain = new Brain(CONFIG.brainLayers);
       if (o.br) brain.setArrays(o.br.map(b64ToF32));
@@ -325,7 +336,12 @@ class Simulation {
     }
     const n = this.creatures.length || 1;
     const structCensus = {};
-    for (const s of this.structs) { const k = STRUCTS[s.id].key; structCensus[k] = (structCensus[k] || 0) + 1; }
+    for (const s of this.structs) {
+      const d = BUILD_DEFS[s.di];
+      if (!d || d.fixed === '_construction') continue;
+      const label = d.emoji + ' ' + d.name;
+      structCensus[label] = (structCensus[label] || 0) + 1;
+    }
     return {
       tick: this.tickCount, pop: this.creatures.length, census,
       maxGen, oldest, born: this.born, died: this.died,

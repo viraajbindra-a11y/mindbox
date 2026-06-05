@@ -75,7 +75,8 @@ const CONFIG = {
   invMax: 40,             // max wood or stone a creature carries
   oreChance: 0.22,        // fraction of mountain tiles that hold ore
   treeRegrow: 0.0010,     // chance a forest tile regrows a tree each tick
-  buildRadius: 7,         // how near a required structure must be to build the next tier
+  buildRadius: 7,         // how near a village/kin must be to build
+  buildThreshold: 8,      // total resources a builder pours in to make a building
   buildCooldown: 60,      // ticks a builder waits between builds
   farmFood: 0.05,         // food a farm tops up on nearby tiles each tick
 

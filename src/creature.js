@@ -35,7 +35,8 @@ class Creature {
     if (d === 'water') return water;
     if (water) return false;
     // a wall blocks everyone except builders (whose kin raised it)
-    if (world.struct[world.idx(x, y)] === STRUCT_BY_KEY.wall.id && !this.def.builder) return false;
+    const di = world.struct[world.idx(x, y)];
+    if (di >= 0 && BUILD_DEFS[di] && BUILD_DEFS[di].effect === 'wall' && !this.def.builder) return false;
     return true;
   }
 
@@ -182,20 +183,30 @@ class Creature {
         break;
       }
     }
+    // build once enough resources are gathered: pour them in, the world (LLM)
+    // decides what building those amounts make
     if (this.buildCd > 0) return;
-    // build the best (highest-tier) structure we can afford and have the prerequisite for
-    for (let t = STRUCTS.length - 1; t >= 0; t--) {
-      const st = STRUCTS[t];
-      if (this.wood < st.cost.wood || this.stone < st.cost.stone) continue;
-      if (st.requires && !sim.hasStructNear(this.x, this.y, st.requires, CONFIG.buildRadius)) continue;
-      if (sim.hasStructNear(this.x, this.y, st.key, st.spacing)) continue;   // don't stack duplicates
-      const spot = this._buildSpot(world, sim);
-      if (spot < 0) continue;
-      sim.build(spot, st.id);
-      this.wood -= st.cost.wood; this.stone -= st.cost.stone;
-      this.buildCd = CONFIG.buildCooldown;
-      break;
+    if (this.wood + this.stone < CONFIG.buildThreshold) return;
+    const spot = this._buildSpot(world, sim);
+    if (spot < 0) return;
+    if (sim.anyStructNear(this.x, this.y, 2)) return;   // spacing — don't stack buildings
+    // build inside an existing village, or where a few sapients have gathered (a new village)
+    if (!sim.anyStructNear(this.x, this.y, CONFIG.buildRadius) && this._nearKin(sim, 3) < 2) return;
+    sim.build(spot, { wood: Math.round(this.wood), stone: Math.round(this.stone) });
+    this.wood = 0; this.stone = 0;
+    this.buildCd = CONFIG.buildCooldown;
+  }
+
+  _nearKin(sim, R) {
+    let n = 0;
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+      if (!dx && !dy) continue;
+      const x = this.x + dx, y = this.y + dy;
+      if (!sim.world.inBounds(x, y)) continue;
+      const o = sim.grid[sim.world.idx(x, y)];
+      if (o && o.def.builder) n++;
     }
+    return n;
   }
 
   _buildSpot(world, sim) {
