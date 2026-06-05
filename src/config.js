@@ -17,9 +17,10 @@ const CONFIG = {
   startHunters: 14,
   minGrazers: 12,         // immigration floor so the world never fully dies
   minHunters: 6,          // keep predators around so the food chain persists
-  maxPop: 1000,           // hard safety cap on total creatures
-  capScale: 0.5,          // scales every species' cap so the world settles
-                          // below maxPop, leaving room for constant births
+  maxPop: 720,            // hard safety cap on total creatures
+  capScale: 0.24,         // scales every species' cap. Lower = fewer creatures,
+                          // more food per creature, longer lives, far less churn
+                          // (an overcrowded world looks chaotic — this calms it)
 
   // --- senses ---
   visionRadius: 5,
@@ -70,7 +71,7 @@ const CONFIG = {
   yearLength: 4800,       // ticks per year (4 seasons, ~one day each)
 
   // --- speed ---
-  ticksPerFrame: 3,
+  ticksPerFrame: 2,       // sim steps per frame; lower = calmer, easier to follow
 };
 
 // --- seasons (a year is 4 seasons) ---
