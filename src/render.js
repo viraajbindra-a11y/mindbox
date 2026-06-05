@@ -167,15 +167,32 @@ class Renderer {
       }
     }
 
-    // kingdom territory tint
+    // kingdom territory — a soft fill plus a CRISP BORDER tracing each realm's
+    // irregular zone (so the organic, house-driven shape reads at a glance)
     if (Kingdoms.territory) {
       const terr = Kingdoms.territory;
-      ctx.globalAlpha = 0.2;
+      const owner = (tx, ty) => (tx < 0 || ty < 0 || tx >= W || ty >= H) ? -1 : terr[ty * W + tx];
+      // soft interior fill
+      ctx.globalAlpha = 0.16;
       for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
         const id = terr[ty * W + tx]; if (!id) continue;
         const col = Kingdoms.colorOf(id); if (!col) continue;
         ctx.fillStyle = col;
         ctx.fillRect((tx - this.cam.x) * s, (ty - this.cam.y) * s, size, size);
+      }
+      // border: a thin strip on any edge whose neighbour belongs to someone else.
+      // strips are inset inside the tile, so a shared border shows BOTH realms' colours.
+      const bw = Math.max(1, Math.round(s / 5));
+      ctx.globalAlpha = 0.92;
+      for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+        const id = terr[ty * W + tx]; if (!id) continue;
+        const col = Kingdoms.colorOf(id); if (!col) continue;
+        ctx.fillStyle = col;
+        const px = (tx - this.cam.x) * s, py = (ty - this.cam.y) * s;
+        if (owner(tx - 1, ty) !== id) ctx.fillRect(px, py, bw, size);
+        if (owner(tx + 1, ty) !== id) ctx.fillRect(px + s - bw, py, bw, size);
+        if (owner(tx, ty - 1) !== id) ctx.fillRect(px, py, size, bw);
+        if (owner(tx, ty + 1) !== id) ctx.fillRect(px, py + s - bw, size, bw);
       }
       ctx.globalAlpha = 1;
     }
