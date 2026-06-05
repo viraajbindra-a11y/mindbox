@@ -102,7 +102,22 @@ const Meta = {
         const near = (a.cx - b.cx) ** 2 + (a.cy - b.cy) ** 2 < 55 * 55;
         if (!near || !a.religion || !b.religion) continue;
         const same = a.religion.name === b.religion.name;
-        if (same) continue;
+        if (same) {
+          // shared faith binds realms into BLOCS: it first RECONCILES co-religionists
+          // who were at war (faith bridges even species rivalry), then that peace grows
+          // into an ALLIANCE — the seed of a faith bloc that fights its wars together
+          const rel = a.relations[b.id];
+          if (rel === 'war') {
+            if (Math.random() < 0.04) {
+              a.relations[b.id] = 'peace'; b.relations[a.id] = 'peace';
+              Kingdoms.log(`🕊️ ${a.religion.name} reconciles ${a.name} and ${b.name}`);
+            }
+          } else if (rel !== 'ally' && Math.random() < 0.06) {
+            a.relations[b.id] = 'ally'; b.relations[a.id] = 'ally';
+            Kingdoms.log(`🤝 ${a.name} and ${b.name} forge an alliance under ${a.religion.name}`);
+          }
+          continue;
+        }
         // holy war: occasionally two faiths come to blows
         if (a.relations[b.id] !== 'war' && Math.random() < 0.06) {
           a.relations[b.id] = 'war'; b.relations[a.id] = 'war';

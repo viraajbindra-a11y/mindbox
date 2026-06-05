@@ -61,8 +61,31 @@ const Kingdoms = {
     for (const k of this.list) this.byId[k.id] = k;
     this._relations();
     this._rebellion(sim);
+    this._allianceWars();
     this._territory(sim);
     this._war(sim);
+  },
+
+  // allies are dragged into each other's wars (one hop per update) — this is what
+  // turns a single border war into a bloc-wide world war as faith alliances chain.
+  _allianceWars() {
+    const decls = [];
+    for (const a of this.list)
+      for (const bid in a.relations) {
+        if (a.relations[bid] !== 'ally') continue;
+        const b = this.byId[bid]; if (!b) continue;
+        for (const cid in b.relations) {
+          if (b.relations[cid] !== 'war') continue;
+          const c = this.byId[cid]; if (!c || c.id === a.id) continue;
+          const cur = a.relations[c.id];
+          if (cur !== 'war' && cur !== 'ally') decls.push([a, b, c]);   // join b's war, unless c is our own ally
+        }
+      }
+    for (const [a, b, c] of decls) {
+      if (a.relations[c.id] === 'ally') continue;   // a later decl may have allied them; never war an ally
+      a.relations[c.id] = 'war'; c.relations[a.id] = 'war';
+      this.log(`⚔ ${a.name} joins its ally ${b.name} against ${c.name}`);
+    }
   },
 
   // REBELLION: a large, far-flung realm can fracture — a distant province breaks

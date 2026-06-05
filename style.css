@@ -117,6 +117,7 @@ canvas.mini { width: 100%; display: block; background: #0e1320; border: 1px soli
 .kpop { color: #8b95a7; }
 .kage { white-space: nowrap; opacity: 0.9; }
 .kwar { color: #e06a6a; white-space: nowrap; }
+.kally { color: #6ec896; white-space: nowrap; }
 .mrow { font-size: 12px; padding: 4px 0; line-height: 1.35; border-bottom: 1px solid #1c2433; }
 .mrow b { color: #d7dde8; font-weight: 600; }
 .mage { color: #9fb0c8; font-size: 11px; }

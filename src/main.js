@@ -148,6 +148,7 @@ function renderKingdoms() {
   const SP = { human: '🧑', elf: '🧝', dwarf: '🧔', orc: '👹' };
   document.getElementById('kingdoms').innerHTML = list.map(k => {
     const wars = Object.keys(k.relations).filter(id => k.relations[id] === 'war' && Kingdoms.byId[id]).length;
+    const allies = Object.keys(k.relations).filter(id => k.relations[id] === 'ally' && Kingdoms.byId[id]).length;
     const siege = k.siege > 0 ? ` <span class="kwar">🛡${Math.min(100, (k.siege / 50 * 100) | 0)}%</span>` : '';
     const age = (k.tech != null) ? Meta.ageOf(k) : null;
     const faith = k.religion ? ` ${k.religion.symbol}` : '';
@@ -155,6 +156,7 @@ function renderKingdoms() {
     return `<div class="krow"${tip}><span class="ksw" style="background:${k.color}"></span>` +
       `<b>${SP[k.species] || ''} ${k.name}</b>${faith}<span class="kpop"> ·${k.pop}</span>` +
       (age ? `<span class="kage"> ${age.emoji}</span>` : '') +
+      (allies ? `<span class="kally"> 🤝${allies}</span>` : '') +
       (wars ? `<span class="kwar"> ⚔${wars}</span>` : '') + siege + `</div>`;
   }).join('');
   renderMeta();
