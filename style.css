@@ -115,5 +115,11 @@ canvas.mini { width: 100%; display: block; background: #0e1320; border: 1px soli
 .ksw { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 .krow b { color: #d7dde8; font-weight: 600; }
 .kpop { color: #8b95a7; }
+.kage { white-space: nowrap; opacity: 0.9; }
 .kwar { color: #e06a6a; white-space: nowrap; }
+.mrow { font-size: 12px; padding: 4px 0; line-height: 1.35; border-bottom: 1px solid #1c2433; }
+.mrow b { color: #d7dde8; font-weight: 600; }
+.mage { color: #9fb0c8; font-size: 11px; }
+.msub { color: #97a2b4; font-size: 11px; margin-left: 15px; }
+.msub i { color: #c8b06e; }
 #history .hrow { font-size: 11.5px; color: #b6bfd0; padding: 2px 0; line-height: 1.35; border-bottom: 1px solid #1c2433; }

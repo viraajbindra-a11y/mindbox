@@ -79,7 +79,8 @@ const Kingdoms = {
     for (const c of sim.creatures) {
       if (c.soldier) {
         for (const k of this.list)
-          if (k.id !== c.kingdomId && this.atWar(c.kingdomId, k.id) && (c.x - k.cx) ** 2 + (c.y - k.cy) ** 2 < 64) k.pressure++;
+          if (k.id !== c.kingdomId && this.atWar(c.kingdomId, k.id) && (c.x - k.cx) ** 2 + (c.y - k.cy) ** 2 < 64)
+            k.pressure += (this.byId[c.kingdomId] && this.byId[c.kingdomId].might) || 1;   // tech-age might
       } else if (c.kingdomId) {
         const k = this.byId[c.kingdomId];
         if (k && (c.x - k.cx) ** 2 + (c.y - k.cy) ** 2 < 64) k.defenders++;
@@ -94,7 +95,7 @@ const Kingdoms = {
   },
 
   _recruit(sim, a, b) {
-    const MAX = 12;
+    const MAX = a.armyCap || 12;   // advanced realms (meta tech age) field bigger armies
     let have = 0;
     for (const c of sim.creatures) if (c.soldier && c.kingdomId === a.id && c.armyTarget === b.id) have++;
     for (const c of sim.creatures) {
@@ -143,6 +144,7 @@ const Kingdoms = {
       name: NAME_A[(Math.random() * NAME_A.length) | 0] + NAME_B[(Math.random() * NAME_B.length) | 0],
       relations: {},
     };
+    if (typeof Meta !== 'undefined') Meta.seed(k);
     if (typeof Ollama !== 'undefined' && Ollama.online) this._llmName(k);
     return k;
   },

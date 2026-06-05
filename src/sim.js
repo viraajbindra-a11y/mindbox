@@ -163,7 +163,7 @@ class Simulation {
     this.rebuildGrid();
     this.updateFire();
     if (this.tickCount % 2 === 0) this.applyStructures();
-    if (this.tickCount % 120 === 0) Kingdoms.update(this);
+    if (this.tickCount % 120 === 0) { Kingdoms.update(this); Meta.update(this); }
     if (this.tickCount % CONFIG.directorEvery === 0) Director.consider(this);
 
     this.counts = {};

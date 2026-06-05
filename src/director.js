@@ -34,8 +34,9 @@ const Director = {
     const ks = Kingdoms.list.slice().sort((a, b) => b.pop - a.pop).slice(0, 8);
     const lines = ks.map(k => `${k.name} (${k.species}, pop ${k.pop})`).join('; ');
     const st = sim.stats();
+    const faith = (typeof Meta !== 'undefined' && Meta.summary) ? ' ' + Meta.summary() : '';
     return `Season ${seasonAt(sim.tickCount).name}, year ${yearNumber(sim.tickCount)}. ` +
-      `World population ${st.pop}. Kingdoms: ${lines || 'none yet'}. ` +
+      `World population ${st.pop}. Kingdoms: ${lines || 'none yet'}.${faith} ` +
       `Recent events: ${(Kingdoms.events || []).slice(0, 3).join(' / ') || 'all quiet'}. What happens next?`;
   },
 

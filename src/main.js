@@ -149,11 +149,30 @@ function renderKingdoms() {
   document.getElementById('kingdoms').innerHTML = list.map(k => {
     const wars = Object.keys(k.relations).filter(id => k.relations[id] === 'war' && Kingdoms.byId[id]).length;
     const siege = k.siege > 0 ? ` <span class="kwar">🛡${Math.min(100, (k.siege / 50 * 100) | 0)}%</span>` : '';
-    return `<div class="krow"><span class="ksw" style="background:${k.color}"></span>` +
-      `<b>${SP[k.species] || ''} ${k.name}</b><span class="kpop"> ·${k.pop}</span>` +
+    const age = (k.tech != null) ? Meta.ageOf(k) : null;
+    const faith = k.religion ? ` ${k.religion.symbol}` : '';
+    const tip = k.culture ? ` title="${age ? age.name : ''} · ${k.culture.trait} · “${k.culture.motto}” · ${k.religion.name}"` : '';
+    return `<div class="krow"${tip}><span class="ksw" style="background:${k.color}"></span>` +
+      `<b>${SP[k.species] || ''} ${k.name}</b>${faith}<span class="kpop"> ·${k.pop}</span>` +
+      (age ? `<span class="kage"> ${age.emoji}</span>` : '') +
       (wars ? `<span class="kwar"> ⚔${wars}</span>` : '') + siege + `</div>`;
   }).join('');
+  renderMeta();
   renderHistory();
+}
+
+function renderMeta() {
+  const sec = document.getElementById('meta-sec');
+  const list = Kingdoms.list.filter(k => k.culture).sort((a, b) => b.pop - a.pop).slice(0, 6);
+  if (!list.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  document.getElementById('meta').innerHTML = list.map(k => {
+    const age = Meta.ageOf(k), c = k.culture, r = k.religion;
+    return `<div class="mrow"><span class="ksw" style="background:${k.color}"></span>` +
+      `<b>${k.name}</b> <span class="mage">${age.emoji} ${age.name}</span>` +
+      `<div class="msub">${c.trait} · ${c.art} · “${c.motto}” · <i>${c.hello}!</i></div>` +
+      `<div class="msub">${r.symbol} ${r.name} — ${r.deity} · ${r.tenet}</div></div>`;
+  }).join('');
 }
 
 function renderHistory() {
