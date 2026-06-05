@@ -25,6 +25,9 @@ class Creature {
     this.justMoved = false;
     this.justAte = false;
     this.wood = 0; this.stone = 0; this.buildCd = 0;   // builder inventory
+    this.kingdomId = 0;                                 // which nation it belongs to (0 = none)
+    this.soldier = false; this.mtx = -1; this.mty = -1; // army orders: march to a target city
+    this.armyTarget = 0;                                // enemy kingdom id this soldier marches on
   }
 
   enterable(world, x, y) {
@@ -104,19 +107,22 @@ class Creature {
   step(world, sim) {
     if (!this.alive) return null;
     const energyBefore = this.energy;
-    const x = this.sense(world, sim);
-    const a = this.brain.act(x);          // 0=up 1=down 2=left 3=right (sampled)
-
-    // execute exactly the action it chose, so the reward credits that choice
-    const DX = [0, 0, -1, 1], DY = [-1, 1, 0, 0];
-    const nx = this.x + DX[a], ny = this.y + DY[a];
     this.justMoved = false;
     this.justAte = false;
-    if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
-      if (a === 2) this.face = -1; else if (a === 3) this.face = 1;
-      this.moveTo(sim, nx, ny);
-      this.energy -= CONFIG.moveCost;
-      this.justMoved = true;
+    let x = null;
+    if (this.soldier && this.mtx >= 0) {
+      this._march(world, sim);            // under orders: march toward the enemy city
+    } else {
+      x = this.sense(world, sim);
+      const a = this.brain.act(x);        // 0=up 1=down 2=left 3=right (sampled)
+      const DX = [0, 0, -1, 1], DY = [-1, 1, 0, 0];
+      const nx = this.x + DX[a], ny = this.y + DY[a];
+      if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
+        if (a === 2) this.face = -1; else if (a === 3) this.face = 1;
+        this.moveTo(sim, nx, ny);
+        this.energy -= CONFIG.moveCost;
+        this.justMoved = true;
+      }
     }
 
     // eat plants on this tile (if it's a plant-eater)
@@ -140,16 +146,31 @@ class Creature {
       }
     }
 
-    if (this.def.builder) this._gatherAndBuild(world, sim);   // sapients gather + build
+    // soldiers strike an adjacent enemy-kingdom creature (even of their own species)
+    if (this.soldier && this.kingdomId) {
+      const N = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      for (const [dx, dy] of N) {
+        const ax = this.x + dx, ay = this.y + dy;
+        if (!world.inBounds(ax, ay)) continue;
+        const o = sim.grid[world.idx(ax, ay)];
+        if (o && o.kingdomId && o.kingdomId !== this.kingdomId && Kingdoms.atWar(this.kingdomId, o.kingdomId)) {
+          o.energy -= 9; if (o.energy <= 0) sim.kill(o);
+          this.justAte = true; break;
+        }
+      }
+    }
+
+    if (this.def.builder && !this.soldier) this._gatherAndBuild(world, sim);   // sapients gather + build
 
     this.energy -= this.def.metabolism * this.size;   // cost of living
     this.age++;
 
-    // TRAIN ITSELF: reward = energy gained this step, minus the danger of
-    // lingering near a predator. The brain reinforces whatever it just did.
-    const L = CONFIG.learn;
-    const reward = (this.energy - energyBefore) * L.rewardScale - L.threatPenalty * this._threat;
-    this.brain.learn(reward, L);
+    // TRAIN ITSELF (only when foraging on its own, not under army orders)
+    if (x) {
+      const L = CONFIG.learn;
+      const reward = (this.energy - energyBefore) * L.rewardScale - L.threatPenalty * this._threat;
+      this.brain.learn(reward, L);
+    }
 
     if (this.energy <= 0 || this.age > this.def.maxAge) { sim.kill(this); return null; }
 
@@ -163,6 +184,24 @@ class Creature {
     sim.grid[sim.world.idx(this.x, this.y)] = null;
     this.x = nx; this.y = ny;
     sim.grid[sim.world.idx(nx, ny)] = this;
+  }
+
+  // march one step toward the army's target city
+  _march(world, sim) {
+    const dx = this.mtx - this.x, dy = this.mty - this.y;
+    if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) return;   // arrived — hold and besiege
+    const sx = Math.sign(dx), sy = Math.sign(dy);
+    const tries = Math.abs(dx) >= Math.abs(dy)
+      ? [[sx, 0], [0, sy || 1], [0, -(sy || 1)], [-sx || 1, 0]]
+      : [[0, sy], [sx || 1, 0], [-(sx || 1), 0], [0, -sy || 1]];
+    for (const [mx, my] of tries) {
+      if (!mx && !my) continue;
+      const nx = this.x + mx, ny = this.y + my;
+      if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
+        if (mx) this.face = mx > 0 ? 1 : -1;
+        this.moveTo(sim, nx, ny); this.energy -= CONFIG.moveCost; this.justMoved = true; return;
+      }
+    }
   }
 
   // gather wood from trees / stone from ore, and raise structures from a tech tree

@@ -142,11 +142,21 @@ function renderKingdoms() {
   document.getElementById('kingdom-count').textContent = '(' + Kingdoms.list.length + ')';
   const SP = { human: '🧑', elf: '🧝', dwarf: '🧔', orc: '👹' };
   document.getElementById('kingdoms').innerHTML = list.map(k => {
-    const wars = Object.keys(k.relations).filter(id => k.relations[id] === 'war' && Kingdoms.byId[id]).map(id => Kingdoms.byId[id].name);
+    const wars = Object.keys(k.relations).filter(id => k.relations[id] === 'war' && Kingdoms.byId[id]).length;
+    const siege = k.siege > 0 ? ` <span class="kwar">🛡${Math.min(100, (k.siege / 50 * 100) | 0)}%</span>` : '';
     return `<div class="krow"><span class="ksw" style="background:${k.color}"></span>` +
       `<b>${SP[k.species] || ''} ${k.name}</b><span class="kpop"> ·${k.pop}</span>` +
-      (wars.length ? `<span class="kwar"> ⚔ ${wars.slice(0, 2).join(', ')}</span>` : '') + `</div>`;
+      (wars ? `<span class="kwar"> ⚔${wars}</span>` : '') + siege + `</div>`;
   }).join('');
+  renderHistory();
+}
+
+function renderHistory() {
+  const sec = document.getElementById('history-sec');
+  const ev = Kingdoms.events || [];
+  if (!ev.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  document.getElementById('history').innerHTML = ev.slice(0, 8).map(e => `<div class="hrow">${e}</div>`).join('');
 }
 
 function renderBuilds(sc) {

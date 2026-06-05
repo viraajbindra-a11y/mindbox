@@ -115,4 +115,5 @@ canvas.mini { width: 100%; display: block; background: #0e1320; border: 1px soli
 .ksw { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 .krow b { color: #d7dde8; font-weight: 600; }
 .kpop { color: #8b95a7; }
-.kwar { color: #e06a6a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kwar { color: #e06a6a; white-space: nowrap; }
+#history .hrow { font-size: 11.5px; color: #b6bfd0; padding: 2px 0; line-height: 1.35; border-bottom: 1px solid #1c2433; }

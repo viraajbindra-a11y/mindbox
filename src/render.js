@@ -206,6 +206,16 @@ class Renderer {
       }
     }
 
+    // marching soldiers get a little red spear
+    for (const c of sim.creatures) {
+      if (!c.soldier) continue;
+      if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
+      const px = (c.x - this.cam.x) * s + s / 2, py = (c.y - this.cam.y) * s + s / 2;
+      ctx.strokeStyle = '#e84a4a'; ctx.lineWidth = Math.max(1, s * 0.12);
+      ctx.beginPath(); ctx.moveTo(px, py - s * 0.45); ctx.lineTo(px, py - s * 0.95); ctx.stroke();
+      ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(px, py - s * 0.95, Math.max(1, s * 0.13), 0, 6.283); ctx.fill();
+    }
+
     // highlight the inspected creature
     const sel = sim.selected;
     if (sel && sel.alive && sel.x >= x0 - 1 && sel.x <= x1 + 1 && sel.y >= y0 - 1 && sel.y <= y1 + 1) {
@@ -236,6 +246,11 @@ class Renderer {
         ctx.beginPath(); ctx.moveTo(px, py - s * 0.7); ctx.lineTo(px - s * 0.45, py); ctx.lineTo(px + s * 0.45, py); ctx.closePath(); ctx.fill(); // little banner
         ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillText(k.name, px + 1, py - s - 4 + 1);
         ctx.fillStyle = k.color; ctx.fillText(k.name, px, py - s - 4);
+        if (k.siege > 0) {   // under siege — red capture bar
+          const bw = s * 1.8, bh = Math.max(2, s * 0.16);
+          ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(px - bw / 2, py - s * 0.45, bw, bh);
+          ctx.fillStyle = '#e84a4a'; ctx.fillRect(px - bw / 2, py - s * 0.45, bw * Math.min(1, k.siege / 50), bh);
+        }
       }
     }
   }
