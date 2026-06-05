@@ -18,6 +18,12 @@ class Creature {
     this.maxE = this.def.maxEnergy * this.size;
     this.age = 0;
     this.alive = true;
+    // animation/view state (set during step, read by the renderer)
+    this.face = Math.random() < 0.5 ? 1 : -1;   // facing left/right
+    this.anim = Math.random() * 6;              // limb phase (desynced per creature)
+    this.animState = 'idle';
+    this.justMoved = false;
+    this.justAte = false;
   }
 
   enterable(world, x, y) {
@@ -88,15 +94,19 @@ class Creature {
     // execute exactly the action it chose, so the reward credits that choice
     const DX = [0, 0, -1, 1], DY = [-1, 1, 0, 0];
     const nx = this.x + DX[a], ny = this.y + DY[a];
+    this.justMoved = false;
+    this.justAte = false;
     if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
+      if (a === 2) this.face = -1; else if (a === 3) this.face = 1;
       this.moveTo(sim, nx, ny);
       this.energy -= CONFIG.moveCost;
+      this.justMoved = true;
     }
 
     // eat plants on this tile (if it's a plant-eater)
     if (this.def.diet !== 'meat') {
       const got = world.eat(this.x, this.y);
-      if (got > 0) this.energy = Math.min(this.maxE, this.energy + got * this.def.foodValue);
+      if (got > 0) { this.energy = Math.min(this.maxE, this.energy + got * this.def.foodValue); this.justAte = true; }
     }
     // bite one adjacent prey (if it's a meat-eater)
     if (this.def.diet !== 'plant') {
@@ -108,6 +118,7 @@ class Creature {
         if (prey && this.def.eatsSet.has(prey.species) && canHunt(this, prey)) {
           sim.kill(prey);
           this.energy = Math.min(this.maxE, this.energy + this.def.preyEnergy);
+          this.justAte = true;
           break;
         }
       }

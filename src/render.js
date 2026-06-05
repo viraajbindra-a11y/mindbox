@@ -111,18 +111,15 @@ class Renderer {
       }
     }
 
-    // creatures — actual emoji when zoomed in, colored dots when zoomed out
-    const drawEmoji = s >= 11;
-    if (drawEmoji) { ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; }
+    // creatures — animated models when zoomed in, colored dots when far out
+    const daylight = 0.5 + 0.5 * Math.sin((sim.tickCount / CONFIG.dayLength) * 6.283);
+    const night = daylight < 0.33;
+    const drawModels = s >= 12;
     for (const c of sim.creatures) {
       if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
       const px = (c.x - this.cam.x) * s + s / 2;
       const py = (c.y - this.cam.y) * s + s / 2;
-      if (drawEmoji) {
-        ctx.font = `${(s * Math.min(1.6, c.size) * 1.05) | 0}px serif`;
-        ctx.fillText(c.def.emoji, px, py + 1);
-        continue;
-      }
+      if (drawModels) { drawCreature(ctx, c, px, py, s, night); continue; }
       const light = 42 + Math.min(34, (c.energy / c.maxE) * 34);
       const sz = Math.min(1.5, c.size);
       const meat = c.def.diet !== 'plant';
@@ -154,10 +151,9 @@ class Renderer {
       ctx.stroke();
     }
 
-    // day/night tint (purely visual)
-    const day = 0.5 + 0.5 * Math.sin((sim.tickCount / CONFIG.dayLength) * 6.283);
-    if (day < 0.96) {
-      ctx.fillStyle = `rgba(10,18,48,${((1 - day) * 0.4).toFixed(3)})`;
+    // day/night tint (purely visual) — reuses daylight from above
+    if (daylight < 0.96) {
+      ctx.fillStyle = `rgba(10,18,48,${((1 - daylight) * 0.4).toFixed(3)})`;
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
   }
