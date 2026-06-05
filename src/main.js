@@ -1,5 +1,7 @@
 // main.js — wires the toolbar + camera + main loop together.
 let sim, renderer, playing = true, tool = 'hand', brush = 3, following = false;
+let speed = 0.5, tickAcc = 0;            // ticks per frame (fractional = slow-mo)
+const SPEEDS = [0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12, 16];   // Speed slider presets
 
 // which tools paint terrain (drag-paint) vs. fire one-shot disasters
 const TERRAIN = { land: 'raise', water: 'water', mountain: 'mountain',
@@ -15,8 +17,11 @@ function init() {
 }
 
 function loop() {
-  if (playing)
-    for (let i = 0; i < CONFIG.ticksPerFrame; i++) sim.tick();
+  if (playing) {
+    tickAcc += speed;                    // accumulate fractional speed → slow-mo or fast-forward
+    let n = 0;
+    while (tickAcc >= 1 && n < 64) { sim.tick(); tickAcc -= 1; n++; }
+  }
   if (following && sim.selected && sim.selected.alive)
     renderer.centerOn(sim.selected.x, sim.selected.y);
   renderer.draw(sim);
@@ -216,7 +221,9 @@ function setupUI() {
   selectTool('hand');
 
   bindSlider('brush', v => { brush = v; }, 'brush');
-  bindSlider('speed', v => { CONFIG.ticksPerFrame = v; });
+  const speedEl = document.getElementById('slider-speed'), speedLbl = document.getElementById('val-speed');
+  const applySpeed = () => { speed = SPEEDS[parseInt(speedEl.value) - 1] || 1; if (speedLbl) speedLbl.textContent = speed + '×'; };
+  speedEl.oninput = applySpeed; applySpeed();
   bindSlider('food', v => { CONFIG.foodGrowth = v / 1000; });
   bindSlider('mut', v => { CONFIG.mutationRate = v / 100; });
 
