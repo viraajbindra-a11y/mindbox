@@ -48,15 +48,15 @@ const CONFIG = {
   mutationAmount: 0.35,
   hueDrift: 8,
 
-  // brain: 14 senses -> 12 hidden -> 4 move actions (a self-training policy net)
-  brainLayers: [14, 12, 4],
+  // brain: 20 senses -> 16 recurrent hidden -> 4 move actions (recurrent actor-critic)
+  brainLayers: [20, 16, 4],
 
   // online reinforcement learning — how each creature trains its own brain in life
   learn: {
-    lr: 0.06,            // how fast it updates its weights
-    traceDecay: 0.9,     // how far back credit for a reward reaches
+    lr: 0.08,            // how fast the policy updates
+    traceDecay: 0.88,    // how far back credit for a reward reaches (memory of recent moves)
     baselineLR: 0.02,    // how fast its "expected reward" adapts
-    weightDecay: 0.0004, // keeps weights from blowing up
+    weightDecay: 0.0006, // keeps weights from blowing up
     rewardScale: 0.05,   // scales the energy-change reward
     threatPenalty: 0.5,  // dislike of sitting next to a predator (teaches fleeing)
   },

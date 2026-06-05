@@ -227,7 +227,7 @@ class Simulation {
   serialize() {
     const w = this.world;
     return JSON.stringify({
-      v: 3, gw: w.w, gh: w.h,
+      v: 4, gw: w.w, gh: w.h,
       biome: bytesToB64(w.biome), tree: bytesToB64(w.tree),
       elev: bytesToB64(w.elev), moist: bytesToB64(w.moist),
       temp: bytesToB64(w.temp), food: bytesToB64(w.food),
@@ -235,8 +235,7 @@ class Simulation {
       creatures: this.creatures.map(c => ({
         k: c.species, x: c.x, y: c.y, e: c.energy, h: c.hue, g: c.generation, a: c.age,
         sz: c.size, vi: c.vision,
-        W1: bytesToB64(c.brain.W1), B1: bytesToB64(c.brain.b1),
-        W2: bytesToB64(c.brain.W2), B2: bytesToB64(c.brain.b2),
+        br: c.brain.getArrays().map(bytesToB64),
       })),
     });
   }
@@ -254,7 +253,7 @@ class Simulation {
     this.world = w;
     this.creatures = d.creatures.filter(o => SPECIES[o.k]).map(o => {
       const brain = new Brain(CONFIG.brainLayers);
-      if (o.W1) brain.setWeights(b64ToF32(o.W1), b64ToF32(o.B1), b64ToF32(o.W2), b64ToF32(o.B2));
+      if (o.br) brain.setArrays(o.br.map(b64ToF32));
       const c = new Creature(o.k, o.x, o.y, o.e, brain, o.h, o.g, o.sz, o.vi);
       c.age = o.a;
       return c;

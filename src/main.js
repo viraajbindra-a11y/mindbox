@@ -92,8 +92,8 @@ function drawBrain(c) {
       }
     }
   };
-  conns(0, b.W1, ni, nh);
-  conns(1, b.W2, nh, no);
+  conns(0, b.Wxh, ni, nh);
+  conns(1, b.Wha, nh, no);
 
   for (let l = 0; l < 3; l++) {
     for (let i = 0; i < sizes[l]; i++) {

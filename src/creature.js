@@ -73,6 +73,14 @@ class Creature {
     const prL = Math.hypot(prDx, prDy) || 1;
     const thL = Math.hypot(thDx, thDy) || 1;
     this._threat = Math.min(1, thMag / 3);   // danger level, used as a learning penalty
+    // can I step each way? (1 = blocked by water/edge/another creature) — teaches obstacle avoidance
+    const BDX = [0, 0, -1, 1], BDY = [-1, 1, 0, 0];
+    const blk = [0, 0, 0, 0];
+    for (let d = 0; d < 4; d++) {
+      const bx = this.x + BDX[d], by = this.y + BDY[d];
+      blk[d] = (this.enterable(world, bx, by) && !sim.grid[world.idx(bx, by)]) ? 0 : 1;
+    }
+    const dayT = (sim.tickCount / CONFIG.dayLength) % 1;          // time of day (cyclic)
     return [
       Math.min(1, this.energy / this.maxE),
       Math.min(1, this.age / this.def.maxAge),
@@ -81,6 +89,8 @@ class Creature {
       thDx / thL, thDy / thL, Math.min(1, thMag / 4),
       Math.min(1, crowd / 6),
       Math.min(1, world.food[world.idx(this.x, this.y)] / 0.9),  // food under me
+      blk[0], blk[1], blk[2], blk[3],
+      Math.sin(dayT * 6.2832), Math.cos(dayT * 6.2832),
       1, // bias
     ];
   }
