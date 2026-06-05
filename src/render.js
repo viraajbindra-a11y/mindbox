@@ -46,15 +46,27 @@ function skyOverlay(t) {
 
 class Renderer {
   constructor(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    canvas.width = 840;
-    canvas.height = 560;
+    // the visible canvas...
+    this.display = canvas;
+    this.display.width = 840;
+    this.display.height = 560;
+    this.dctx = canvas.getContext('2d');
+    this.dctx.imageSmoothingEnabled = false;
+    // ...and a low-res buffer everything is drawn into, then scaled up with
+    // nearest-neighbour for a crisp WorldBox-style pixel look everywhere.
+    this.PIXEL = 3;
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = Math.round(840 / this.PIXEL);
+    this.canvas.height = Math.round(560 / this.PIXEL);
+    this.ctx = this.canvas.getContext('2d');
+    this.ctx.imageSmoothingEnabled = false;
     this.cam = { x: 0, y: 0, scale: 1 };
     this.fit();
   }
 
   minScale() { return Math.max(this.canvas.width / CONFIG.gridW, this.canvas.height / CONFIG.gridH); }
+  _bx(sx) { return sx * this.canvas.width / this.display.width; }   // display px → buffer px
+  _by(sy) { return sy * this.canvas.height / this.display.height; }
 
   fit() {
     this.cam.scale = this.minScale();
@@ -62,7 +74,7 @@ class Renderer {
   }
 
   clamp() {
-    this.cam.scale = Math.min(40, Math.max(this.minScale(), this.cam.scale));
+    this.cam.scale = Math.max(1, Math.round(Math.min(40, Math.max(this.minScale(), this.cam.scale))));  // integer px/tile = crisp
     const viewW = this.canvas.width / this.cam.scale;
     const viewH = this.canvas.height / this.cam.scale;
     this.cam.x = Math.max(0, Math.min(CONFIG.gridW - viewW, this.cam.x));
@@ -71,24 +83,24 @@ class Renderer {
 
   screenToTile(sx, sy) {
     return {
-      tx: Math.floor(this.cam.x + sx / this.cam.scale),
-      ty: Math.floor(this.cam.y + sy / this.cam.scale),
+      tx: Math.floor(this.cam.x + this._bx(sx) / this.cam.scale),
+      ty: Math.floor(this.cam.y + this._by(sy) / this.cam.scale),
     };
   }
 
-  zoomAt(sx, sy, factor) {
-    const wx = this.cam.x + sx / this.cam.scale;
-    const wy = this.cam.y + sy / this.cam.scale;
-    this.cam.scale *= factor;
+  zoomAt(sx, sy, dir) {   // dir: +1 zoom in, -1 zoom out (integer steps)
+    const bx = this._bx(sx), by = this._by(sy);
+    const wx = this.cam.x + bx / this.cam.scale, wy = this.cam.y + by / this.cam.scale;
+    this.cam.scale = Math.max(1, Math.min(40, this.cam.scale + dir));
     this.clamp();
-    this.cam.x = wx - sx / this.cam.scale;
-    this.cam.y = wy - sy / this.cam.scale;
+    this.cam.x = wx - bx / this.cam.scale;
+    this.cam.y = wy - by / this.cam.scale;
     this.clamp();
   }
 
   pan(dxScreen, dyScreen) {
-    this.cam.x -= dxScreen / this.cam.scale;
-    this.cam.y -= dyScreen / this.cam.scale;
+    this.cam.x -= this._bx(dxScreen) / this.cam.scale;
+    this.cam.y -= this._by(dyScreen) / this.cam.scale;
     this.clamp();
   }
 
@@ -181,7 +193,7 @@ class Renderer {
     // creatures — animated models when zoomed in, colored dots when far out
     const dayT = (sim.tickCount / CONFIG.dayLength) % 1;        // time of day, 0..1
     const night = (0.5 + 0.5 * Math.sin(2 * Math.PI * (dayT - 0.25))) < 0.33;
-    const drawModels = s >= 12;
+    const drawModels = s >= 7;   // s is buffer px/tile (×PIXEL on screen)
     for (const c of sim.creatures) {
       if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
       const px = (c.x - this.cam.x) * s + s / 2;
@@ -245,7 +257,7 @@ class Renderer {
     }
 
     // kingdom capital markers + names (on top so they stay readable at night)
-    if (s >= 4 && Kingdoms.list.length) {
+    if (s >= 2 && Kingdoms.list.length) {
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.font = `bold ${Math.min(15, Math.max(9, s * 0.85)) | 0}px sans-serif`;
       for (const k of Kingdoms.list) {
@@ -262,5 +274,9 @@ class Renderer {
         }
       }
     }
+
+    // scale the low-res buffer up to the visible canvas → crisp pixels everywhere
+    this.dctx.imageSmoothingEnabled = false;
+    this.dctx.drawImage(this.canvas, 0, 0, this.display.width, this.display.height);
   }
 }

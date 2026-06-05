@@ -343,7 +343,7 @@ function setupCanvas() {
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const r = canvas.getBoundingClientRect();
-    renderer.zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.12 : 0.89);
+    renderer.zoomAt(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1 : -1);
   }, { passive: false });
 }
 
