@@ -66,6 +66,7 @@ class Creature {
     const plL = Math.hypot(plDx, plDy) || 1;
     const prL = Math.hypot(prDx, prDy) || 1;
     const thL = Math.hypot(thDx, thDy) || 1;
+    this._threat = Math.min(1, thMag / 3);   // danger level, used as a learning penalty
     return [
       Math.min(1, this.energy / this.maxE),
       Math.min(1, this.age / this.def.maxAge),
@@ -73,24 +74,23 @@ class Creature {
       prDx / prL, prDy / prL, Math.min(1, prMag / 4),
       thDx / thL, thDy / thL, Math.min(1, thMag / 4),
       Math.min(1, crowd / 6),
+      Math.min(1, world.food[world.idx(this.x, this.y)] / 0.9),  // food under me
       1, // bias
     ];
   }
 
   step(world, sim) {
     if (!this.alive) return null;
-    const out = this.brain.forward(this.sense(world, sim));
+    const energyBefore = this.energy;
+    const x = this.sense(world, sim);
+    const a = this.brain.act(x);          // 0=up 1=down 2=left 3=right (sampled)
 
-    // move toward the brain's preferred open direction (fall back if blocked)
+    // execute exactly the action it chose, so the reward credits that choice
     const DX = [0, 0, -1, 1], DY = [-1, 1, 0, 0];
-    const order = [0, 1, 2, 3].sort((a, b) => out[b] - out[a]);
-    for (const d of order) {
-      const nx = this.x + DX[d], ny = this.y + DY[d];
-      if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
-        this.moveTo(sim, nx, ny);
-        this.energy -= CONFIG.moveCost;
-        break;
-      }
+    const nx = this.x + DX[a], ny = this.y + DY[a];
+    if (this.enterable(world, nx, ny) && !sim.grid[world.idx(nx, ny)]) {
+      this.moveTo(sim, nx, ny);
+      this.energy -= CONFIG.moveCost;
     }
 
     // eat plants on this tile (if it's a plant-eater)
@@ -113,9 +113,15 @@ class Creature {
       }
     }
 
-    const meta = this.def.metabolism * this.size;
-    this.energy -= meta;
+    this.energy -= this.def.metabolism * this.size;   // cost of living
     this.age++;
+
+    // TRAIN ITSELF: reward = energy gained this step, minus the danger of
+    // lingering near a predator. The brain reinforces whatever it just did.
+    const L = CONFIG.learn;
+    const reward = (this.energy - energyBefore) * L.rewardScale - L.threatPenalty * this._threat;
+    this.brain.learn(reward, L);
+
     if (this.energy <= 0 || this.age > this.def.maxAge) { sim.kill(this); return null; }
 
     if (this.energy > this.def.reproduceAt * this.size && sim.canReproduce(this.species)) {
@@ -139,8 +145,7 @@ class Creature {
     for (const [dx, dy] of spots) {
       const x = this.x + dx, y = this.y + dy;
       if (this.enterable(world, x, y) && !sim.grid[world.idx(x, y)]) {
-        const brain = this.brain.clone();
-        brain.mutate(CONFIG.mutationRate, CONFIG.mutationAmount);
+        const brain = new Brain(CONFIG.brainLayers);   // child is born blank; it trains itself
         this.energy -= this.def.reproduceCost * this.size;
         const hue = (this.hue + (Math.random() * 2 - 1) * CONFIG.hueDrift + 360) % 360;
         const size = Math.max(0.6, Math.min(1.7, this.size + randn() * 0.06));

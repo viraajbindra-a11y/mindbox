@@ -72,44 +72,46 @@ function drawBrain(c) {
   const ctx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
   ctx.clearRect(0, 0, W, H);
-  const acts = c.brain.trace(c.sense(sim.world, sim));
-  const layers = c.brain.layers;
-  const colX = l => 16 + (W - 32) * (l / (layers.length - 1));
-  const nodeY = (l, i) => { const n = layers[l]; return 12 + (H - 24) * (n === 1 ? 0.5 : i / (n - 1)); };
+  const b = c.brain;
+  const [ni, nh, no] = b.layers;
+  const acts = b.trace(c.sense(sim.world, sim));   // [inputs, hidden, action probabilities]
+  const sizes = [ni, nh, no];
+  const colX = l => 16 + (W - 32) * (l / 2);        // three columns
+  const nodeY = (l, i) => { const n = sizes[l]; return 12 + (H - 24) * (n === 1 ? 0.5 : i / (n - 1)); };
 
-  for (let l = 0; l < c.brain.weights.length; l++) {
-    const w = c.brain.weights[l], inN = layers[l], outN = layers[l + 1];
+  const conns = (from, w, inN, outN) => {
     for (let i = 0; i < inN; i++) {
-      const x1 = colX(l), y1 = nodeY(l, i);
+      const x1 = colX(from), y1 = nodeY(from, i);
       for (let o = 0; o < outN; o++) {
         const wt = w[i * outN + o];
-        const a = Math.min(0.45, Math.abs(wt) * 0.45);
-        if (a < 0.05) continue;
+        const a = Math.min(0.5, Math.abs(wt) * 0.5);
+        if (a < 0.04) continue;
         ctx.strokeStyle = wt > 0 ? `rgba(110,200,150,${a})` : `rgba(220,110,90,${a})`;
         ctx.lineWidth = 0.6;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(colX(l + 1), nodeY(l + 1, o));
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(colX(from + 1), nodeY(from + 1, o)); ctx.stroke();
       }
     }
-  }
-  for (let l = 0; l < layers.length; l++) {
-    for (let i = 0; i < layers[l]; i++) {
+  };
+  conns(0, b.W1, ni, nh);
+  conns(1, b.W2, nh, no);
+
+  for (let l = 0; l < 3; l++) {
+    for (let i = 0; i < sizes[l]; i++) {
       const v = Math.max(-1, Math.min(1, acts[l][i]));
       ctx.fillStyle = v >= 0
         ? `rgb(${(50 + 20 * v) | 0},${(120 + 110 * v) | 0},${(95 + 40 * v) | 0})`
         : `rgb(${(150 + 80 * -v) | 0},80,70)`;
-      ctx.beginPath();
-      ctx.arc(colX(l), nodeY(l, i), 3.1, 0, 6.283);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(colX(l), nodeY(l, i), 3.1, 0, 6.283); ctx.fill();
     }
   }
-  const labels = ['↑', '↓', '←', '→', '✦'];
-  ctx.fillStyle = '#9aa4b6';
-  ctx.font = '9px monospace';
-  const lastL = layers.length - 1;
-  for (let o = 0; o < layers[lastL]; o++) ctx.fillText(labels[o] || '', W - 11, nodeY(lastL, o) + 3);
+
+  const labels = ['↑', '↓', '←', '→'];
+  ctx.fillStyle = '#9aa4b6'; ctx.font = '9px monospace';
+  for (let o = 0; o < no; o++) ctx.fillText(labels[o] || '', W - 11, nodeY(2, o) + 3);
+  // ring the action it's currently most likely to pick
+  let best = 0; for (let k = 1; k < no; k++) if (acts[2][k] > acts[2][best]) best = k;
+  ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(colX(2), nodeY(2, best), 5, 0, 6.283); ctx.stroke();
 }
 
 function updateHUD() {

@@ -78,7 +78,7 @@ class Simulation {
   spawnAt(key, x, y, brain, size, vision) {
     const def = SPECIES[key];
     if (!def || !this.canStand(def, x, y) || this.grid[this.world.idx(x, y)]) return;
-    const b = brain || new NeuralNet(CONFIG.brainLayers);
+    const b = brain || new Brain(CONFIG.brainLayers);
     const hue = (def.hue + (Math.random() * 2 - 1) * 25 + 360) % 360;
     const c = new Creature(key, x, y, def.maxEnergy * (size || def.size) * 0.55, b, hue, 0, size, vision);
     this.grid[this.world.idx(x, y)] = c;
@@ -227,7 +227,7 @@ class Simulation {
   serialize() {
     const w = this.world;
     return JSON.stringify({
-      v: 2, gw: w.w, gh: w.h,
+      v: 3, gw: w.w, gh: w.h,
       biome: bytesToB64(w.biome), tree: bytesToB64(w.tree),
       elev: bytesToB64(w.elev), moist: bytesToB64(w.moist),
       temp: bytesToB64(w.temp), food: bytesToB64(w.food),
@@ -235,7 +235,8 @@ class Simulation {
       creatures: this.creatures.map(c => ({
         k: c.species, x: c.x, y: c.y, e: c.energy, h: c.hue, g: c.generation, a: c.age,
         sz: c.size, vi: c.vision,
-        w: c.brain.weights.map(bytesToB64), b: c.brain.biases.map(bytesToB64),
+        W1: bytesToB64(c.brain.W1), B1: bytesToB64(c.brain.b1),
+        W2: bytesToB64(c.brain.W2), B2: bytesToB64(c.brain.b2),
       })),
     });
   }
@@ -252,7 +253,8 @@ class Simulation {
     w.fire = new Float32Array(d.gw * d.gh);
     this.world = w;
     this.creatures = d.creatures.filter(o => SPECIES[o.k]).map(o => {
-      const brain = new NeuralNet(CONFIG.brainLayers, o.w.map(b64ToF32), o.b.map(b64ToF32));
+      const brain = new Brain(CONFIG.brainLayers);
+      if (o.W1) brain.setWeights(b64ToF32(o.W1), b64ToF32(o.B1), b64ToF32(o.W2), b64ToF32(o.B2));
       const c = new Creature(o.k, o.x, o.y, o.e, brain, o.h, o.g, o.sz, o.vi);
       c.age = o.a;
       return c;
