@@ -38,6 +38,11 @@ You play the god: shape the land, grow forests, and hurl meteors.
   trains itself from scratch.
 - **A living food web.** All 27 species' populations rise and crash in
   predator–prey cycles that nobody programmed. The side graph shows it live.
+- **A hand-drawn, animated world.** Zoom in and every creature is a little
+  procedurally-drawn animal (no emoji) that **walks** (legs swing), **eats** (head
+  dips), and **sleeps** (lies down with zzz at night). A **day/night** sky cycles
+  sunrise → noon → sunset → night, and a four-season **year** recolours the land
+  (green spring → orange autumn → pale winter) and changes how fast plants grow.
 
 ## Controls
 
@@ -70,7 +75,8 @@ Plain HTML + Canvas + JavaScript — no libraries, no build.
 | `src/world.js`    | the grid: biomes, food, fire, terraforming |
 | `src/creature.js` | one AI agent: sense → act → learn → breed |
 | `src/sim.js`      | runs time, immigration, disasters, save/load |
-| `src/render.js`   | pan/zoom camera, biomes, emoji creatures, day/night |
+| `src/sprites.js`  | procedurally-drawn animated animal models |
+| `src/render.js`   | pan/zoom camera, biomes, day/night sky, seasons |
 | `src/main.js`     | toolbar, census, graph, live brain viewer, main loop |
 
 ## Ideas for next
