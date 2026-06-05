@@ -100,6 +100,8 @@ class Renderer {
     const y1 = Math.min(H - 1, Math.ceil(this.cam.y + this.canvas.height / s));
     const size = Math.ceil(s) + 1;
     const drawTrees = s >= 4;
+    const season = seasonBlend(sim.tickCount);
+    const seasonTint = season.tint, seasonStr = season.strength;
 
     ctx.fillStyle = '#0c0f16';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -112,8 +114,13 @@ class Renderer {
         // shade by elevation for a little depth
         const shade = 0.82 + world.elev[i] * 0.32;
         r *= shade; g *= shade; bl *= shade;
-        // grass/forest get brighter with more food
-        if (b === B.GRASS || b === B.FOREST || b === B.SAVANNA) g += world.food[i] * 45;
+        // grass/forest get brighter with more food, then tinted by the season
+        if (b === B.GRASS || b === B.FOREST || b === B.SAVANNA) {
+          g += world.food[i] * 45;
+          r += (seasonTint[0] - r) * seasonStr;
+          g += (seasonTint[1] - g) * seasonStr;
+          bl += (seasonTint[2] - bl) * seasonStr;
+        }
         const fire = world.fire[i];
         const px = (tx - this.cam.x) * s, py = (ty - this.cam.y) * s;
         if (fire > 0) {

@@ -117,6 +117,9 @@ function drawBrain(c) {
 function updateHUD() {
   const s = sim.stats();
   set('stat-tick', s.tick);
+  const seas = seasonAt(s.tick);
+  set('stat-season', seas.emoji + ' ' + seas.name);
+  set('stat-year', yearNumber(s.tick));
   set('stat-pop', s.pop);
   set('stat-gen', s.maxGen);
   set('stat-size', s.avgSize.toFixed(2));

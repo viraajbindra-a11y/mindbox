@@ -104,7 +104,7 @@ class Simulation {
   }
 
   tick() {
-    this.world.grow(CONFIG.foodGrowth);
+    this.world.grow(CONFIG.foodGrowth * seasonBlend(this.tickCount).food);   // plants grow with the season
     this.rebuildGrid();
     this.updateFire();
 

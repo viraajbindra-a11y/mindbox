@@ -66,8 +66,33 @@ const CONFIG = {
   fireSpread: 0.20,
 
   // --- atmosphere ---
-  dayLength: 1200,        // ticks per full day/night cycle (visual only)
+  dayLength: 1200,        // ticks per full day/night cycle
+  yearLength: 4800,       // ticks per year (4 seasons, ~one day each)
 
   // --- speed ---
   ticksPerFrame: 3,
 };
+
+// --- seasons (a year is 4 seasons) ---
+// food: how fast plants grow this season; tint/strength: how the land is recoloured
+const SEASONS = [
+  { name: 'Spring', emoji: '🌱', food: 1.25, tint: [120, 200, 110], strength: 0.16 },
+  { name: 'Summer', emoji: '☀️', food: 1.10, tint: [205, 200, 90],  strength: 0.10 },
+  { name: 'Autumn', emoji: '🍂', food: 0.70, tint: [178, 110, 48],  strength: 0.34 },
+  { name: 'Winter', emoji: '❄️', food: 0.40, tint: [212, 220, 228], strength: 0.44 },
+];
+function yearPhase(tick) { return (tick / CONFIG.yearLength) % 1; }        // 0..1 through the year
+function seasonAt(tick) { return SEASONS[Math.floor(yearPhase(tick) * 4) % 4]; }
+function yearNumber(tick) { return Math.floor(tick / CONFIG.yearLength) + 1; }
+// smoothly blended season values (so transitions aren't abrupt)
+function seasonBlend(tick) {
+  const p = yearPhase(tick) * 4;
+  const i = Math.floor(p) % 4, f = p - Math.floor(p);
+  const a = SEASONS[i], b = SEASONS[(i + 1) % 4];
+  const L = (x, y) => x + (y - x) * f;
+  return {
+    food: L(a.food, b.food),
+    tint: [L(a.tint[0], b.tint[0]), L(a.tint[1], b.tint[1]), L(a.tint[2], b.tint[2])],
+    strength: L(a.strength, b.strength),
+  };
+}
