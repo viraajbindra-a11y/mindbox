@@ -3,8 +3,11 @@
 A **WorldBox-style god sandbox** where every creature is its own **AI agent**.
 
 Each creature carries a small **neural-network brain**. Every tick it senses the
-world around it, its brain decides what to do, and it moves / eats / fights /
-breeds. Nothing is scripted — a creature only knows what evolution has taught it.
+world, its brain decides what to do, and it moves / eats / fights / breeds.
+Nothing is scripted — and nothing is pre-trained: **every creature is born
+knowing nothing and teaches itself to survive while it lives** (online
+reinforcement learning). It gets "rewarded" for gaining energy by eating and
+hunting, and learns which moves lead there.
 
 You play the god: shape the land, grow forests, and hurl meteors.
 
@@ -21,16 +24,19 @@ You play the god: shape the land, grow forests, and hurl meteors.
   snake), omnivores (bear, boar), aquatic life (fish, shark, crab, whale,
   octopus), the four kingdoms (human, elf, dwarf, orc) — who go to **war** with
   each other — and monsters (slime, skeleton, demon, golem, and a flying 🐉
-  **dragon** apex). Each has its own diet, habitat, body, and evolving brain.
+  **dragon** apex). Each has its own diet, habitat, and body.
   Adding a new creature is a single table row.
-- **Evolution, not scripting.** When a creature is well-fed it reproduces; the
-  child copies its brain with small **mutations**. Better brains survive and
-  spread. A creature's **color** is inherited, so you can watch winning families
-  take over the map.
-- **Evolvable bodies.** `size` and `vision` are genes too. Bigger grazers can
-  resist smaller hunters, so the two species get caught in a **size arms race** —
-  grazers grow to escape, hunters grow to catch.
-- **A living food chain.** Grazer and hunter populations rise and crash in
+- **Lifetime learning, not scripting.** A newborn's brain starts blank — at first
+  it just moves at random. As it lives, a reward signal (energy gained from
+  eating/hunting, minus the danger of lingering near a predator) teaches it which
+  moves pay off. It literally learns to forage and hunt *during its own life*.
+  Click 🔍 **Inspect** to watch one's weights change as it learns. (Measured: a
+  self-training creature finds ~4× more food than one with learning switched off.)
+- **Bodies still evolve.** `size` and `vision` are genes passed to offspring with
+  small mutations, so the *bodies* adapt across generations — a predator/prey
+  **size arms race** (bigger prey resist smaller hunters) — even as each *mind*
+  trains itself from scratch.
+- **A living food web.** All 27 species' populations rise and crash in
   predator–prey cycles that nobody programmed. The side graph shows it live.
 
 ## Controls
@@ -59,16 +65,16 @@ Plain HTML + Canvas + JavaScript — no libraries, no build.
 |------|-----------|
 | `src/config.js`   | every tunable number |
 | `src/noise.js`    | value noise for terrain generation |
-| `src/brain.js`    | the neural network (a creature's mind) |
+| `src/species.js`  | the model for every creature type (one row each) |
+| `src/brain.js`    | the self-training brain (online reinforcement learning) |
 | `src/world.js`    | the grid: biomes, food, fire, terraforming |
-| `src/creature.js` | one AI agent: sense → think → act → breed |
-| `src/sim.js`      | runs time, evolution, disasters, save/load |
-| `src/render.js`   | pan/zoom camera, biomes, creatures, day/night |
-| `src/main.js`     | toolbar, graph, brain viewer, the main loop |
+| `src/creature.js` | one AI agent: sense → act → learn → breed |
+| `src/sim.js`      | runs time, immigration, disasters, save/load |
+| `src/render.js`   | pan/zoom camera, biomes, emoji creatures, day/night |
+| `src/main.js`     | toolbar, census, graph, live brain viewer, main loop |
 
 ## Ideas for next
 
-- **Lifetime learning** — brains that also learn *during* a creature's own life
-  (reinforcement learning), not only across generations.
-- A third species, herding/flocking, disease, seasons.
+- Memory in the brain (recurrent) so it can learn things that take several steps.
+- Herding/flocking rewards, disease, seasons.
 - Tribes & buildings (toward true WorldBox civilizations).
