@@ -206,18 +206,63 @@ const Kingdoms = {
       }
   },
 
+  // Organic, WorldBox-style territory. Instead of a circle, a realm owns ZONES
+  // (chunky 4x4 tile cells) seeded by its CAPITAL and its HOUSES, grown outward a
+  // couple of zones (the "claim neighbouring land" expansion) and clipped to habitable
+  // land. So borders are irregular, hug coasts and lakes, and spread as more houses are
+  // built. Houses are stationary, so the shape is stable — it only shifts as the realm
+  // actually builds. Nearest settlement wins contested ground. (WorldBox uses 8x8 zones
+  // that a village claims outward from its buildings; this is the same idea, finer.)
   _territory(sim) {
-    const W = sim.world.w, H = sim.world.h, R = 15;
+    const W = sim.world.w, H = sim.world.h;
+    const Z = 4;                                          // zone size in tiles
+    const ZW = Math.ceil(W / Z), ZH = Math.ceil(H / Z), NZ = ZW * ZH;
+    if (!this._zone || this._zone.length !== NZ) { this._zone = new Int16Array(NZ); this._zdist = new Float32Array(NZ); }
+    const zone = this._zone, zdist = this._zdist;
+    zone.fill(0); zdist.fill(1e9);
+    const qx = [], qy = []; let head = 0;
+    const seedTile = (tx, ty, id) => {
+      const zx = (tx / Z) | 0, zy = (ty / Z) | 0;
+      if (zx < 0 || zy < 0 || zx >= ZW || zy >= ZH) return;
+      const z = zy * ZW + zx;
+      if (zdist[z] > 0) { zdist[z] = 0; zone[z] = id; qx.push(zx); qy.push(zy); }
+    };
+    // seeds: the capital, plus every HOUSE (attributed to its nearest capital)
+    for (const k of this.list) seedTile(k.cx, k.cy, k.id);
+    for (const st of sim.structs) {
+      const tx = st.idx % W, ty = (st.idx / W) | 0;
+      let best = 0, bd = 24 * 24;
+      for (const k of this.list) { const d = (k.cx - tx) ** 2 + (k.cy - ty) ** 2; if (d < bd) { bd = d; best = k.id; } }
+      if (best) seedTile(tx, ty, best);
+    }
+    // grow outward a couple of zones, nearest seed wins — this makes the outline
+    // irregular (the union of all the settlement zones) rather than a clean circle
+    const GROW = 2;
+    while (head < qx.length) {
+      const zx = qx[head], zy = qy[head]; head++;
+      const z = zy * ZW + zx; const d = zdist[z]; if (d >= GROW) continue;
+      const id = zone[z];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = zx + dx, ny = zy + dy;
+        if (nx < 0 || ny < 0 || nx >= ZW || ny >= ZH) continue;
+        const nz = ny * ZW + nx;
+        if (zdist[nz] > d + 1) { zdist[nz] = d + 1; zone[nz] = id; qx.push(nx); qy.push(ny); }
+      }
+    }
+    // paint per-tile, skipping open water so borders hug the coastline (more organic)
     this.territory.fill(0);
-    this._dist.fill(1e9);
-    for (const k of this.list) {
-      for (let y = Math.max(0, k.cy - R); y <= Math.min(H - 1, k.cy + R); y++)
-        for (let x = Math.max(0, k.cx - R); x <= Math.min(W - 1, k.cx + R); x++) {
-          const d = (x - k.cx) ** 2 + (y - k.cy) ** 2;
-          if (d > R * R) continue;
-          const i = y * W + x;
-          if (d < this._dist[i]) { this._dist[i] = d; this.territory[i] = k.id; }
-        }
+    const biome = sim.world.biome;
+    for (let ty = 0; ty < H; ty++) {
+      const zrow = ((ty / Z) | 0) * ZW;
+      for (let tx = 0; tx < W; tx++) {
+        const id = zone[zrow + ((tx / Z) | 0)];
+        if (!id) continue;
+        const i = ty * W + tx;
+        const b = biome[i];
+        if (b === B.DEEP || b === B.SHALLOW) continue;   // don't claim open water
+        this.territory[i] = id;
+      }
     }
   },
 
