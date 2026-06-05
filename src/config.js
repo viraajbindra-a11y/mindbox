@@ -68,6 +68,14 @@ const CONFIG = {
   fireDamage: 16,
   fireSpread: 0.20,
 
+  // --- plague (a spreading sickness) ---
+  plagueDamage: 0.5,      // energy lost per tick while infected
+  plagueSpread: 0.05,     // chance per tick to infect an adjacent creature
+  plagueDuration: 500,    // ticks an infection lasts
+
+  // --- AI world director ---
+  directorEvery: 700,     // ticks between the LLM director's decisions
+
   // --- atmosphere ---
   dayLength: 1200,        // ticks per full day/night cycle
   yearLength: 4800,       // ticks per year (4 seasons, ~one day each)

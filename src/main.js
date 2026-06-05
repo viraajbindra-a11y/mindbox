@@ -288,6 +288,8 @@ function setupCraft() {
     fillItems(); renderLog();
   };
 
+  $('director-on').onchange = e => { Director.enabled = e.target.checked; };
+
   let timer = null;
   $('craft-auto').onchange = e => {
     if (timer) { clearInterval(timer); timer = null; }

@@ -164,6 +164,7 @@ class Simulation {
     this.updateFire();
     if (this.tickCount % 2 === 0) this.applyStructures();
     if (this.tickCount % 120 === 0) Kingdoms.update(this);
+    if (this.tickCount % CONFIG.directorEvery === 0) Director.consider(this);
 
     this.counts = {};
     for (const c of this.creatures) this.counts[c.species] = (this.counts[c.species] || 0) + 1;
@@ -270,6 +271,16 @@ class Simulation {
     for (const c of this.creatures)
       if ((c.x - cx) ** 2 + (c.y - cy) ** 2 <= r * r) this.kill(c);
   }
+
+  // --- world events (used by the AI director and god tools) ---
+  plague(cx, cy, r = 5) {
+    let n = 0;
+    for (const c of this.creatures) if ((c.x - cx) ** 2 + (c.y - cy) ** 2 <= r * r && !c.infected) { c.infected = CONFIG.plagueDuration; n++; }
+    return n;
+  }
+  raid(cx, cy) { for (let k = 0; k < 7; k++) this.spawnAt('orc', cx + ((Math.random() * 9) | 0) - 4, cy + ((Math.random() * 9) | 0) - 4); }
+  summon(cx, cy) { for (let k = 0; k < 2; k++) this.spawnAt('dragon', cx + ((Math.random() * 7) | 0) - 3, cy + ((Math.random() * 7) | 0) - 3); }
+  blessing(cx, cy, r = 6) { for (const c of this.creatures) if ((c.x - cx) ** 2 + (c.y - cy) ** 2 <= r * r) { c.energy = c.maxE; c.infected = 0; } }
 
   selectAt(tx, ty) {
     let best = null, bestD = 81;

@@ -28,6 +28,7 @@ class Creature {
     this.kingdomId = 0;                                 // which nation it belongs to (0 = none)
     this.soldier = false; this.mtx = -1; this.mty = -1; // army orders: march to a target city
     this.armyTarget = 0;                                // enemy kingdom id this soldier marches on
+    this.infected = 0;                                  // plague timer (0 = healthy)
   }
 
   enterable(world, x, y) {
@@ -170,6 +171,17 @@ class Creature {
       const L = CONFIG.learn;
       const reward = (this.energy - energyBefore) * L.rewardScale - L.threatPenalty * this._threat;
       this.brain.learn(reward, L);
+    }
+
+    // plague: drains energy and spreads to neighbours
+    if (this.infected > 0) {
+      this.infected--;
+      this.energy -= CONFIG.plagueDamage;
+      if (Math.random() < CONFIG.plagueSpread) {
+        const PN = [[-1, 0], [1, 0], [0, -1], [0, 1]], p = PN[(Math.random() * 4) | 0];
+        const ax = this.x + p[0], ay = this.y + p[1];
+        if (world.inBounds(ax, ay)) { const o = sim.grid[world.idx(ax, ay)]; if (o && !o.infected) o.infected = CONFIG.plagueDuration; }
+      }
     }
 
     if (this.energy <= 0 || this.age > this.def.maxAge) { sim.kill(this); return null; }

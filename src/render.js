@@ -216,6 +216,15 @@ class Renderer {
       ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(px, py - s * 0.95, Math.max(1, s * 0.13), 0, 6.283); ctx.fill();
     }
 
+    // plague — infected creatures get a sickly green bubble
+    for (const c of sim.creatures) {
+      if (!c.infected) continue;
+      if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
+      const px = (c.x - this.cam.x) * s + s / 2, py = (c.y - this.cam.y) * s + s / 2;
+      ctx.fillStyle = 'rgba(120,210,80,0.6)';
+      ctx.beginPath(); ctx.arc(px, py - s * 0.12, Math.max(1.2, s * 0.22), 0, 6.283); ctx.fill();
+    }
+
     // highlight the inspected creature
     const sel = sim.selected;
     if (sel && sel.alive && sel.x >= x0 - 1 && sel.x <= x1 + 1 && sel.y >= y0 - 1 && sel.y <= y1 + 1) {
