@@ -24,6 +24,7 @@ class Creature {
     this.animState = 'idle';
     this.justMoved = false;
     this.justAte = false;
+    this.wood = 0; this.stone = 0; this.buildCd = 0;   // builder inventory
   }
 
   enterable(world, x, y) {
@@ -31,7 +32,11 @@ class Creature {
     const d = this.def.domain;
     if (d === 'air') return true;            // flies over land and water
     const water = world.isWater(x, y);
-    return d === 'water' ? water : !water;   // water-only vs land-only
+    if (d === 'water') return water;
+    if (water) return false;
+    // a wall blocks everyone except builders (whose kin raised it)
+    if (world.struct[world.idx(x, y)] === STRUCT_BY_KEY.wall.id && !this.def.builder) return false;
+    return true;
   }
 
   // 14 senses: own state, nearest plant / prey / threat directions, crowding.
@@ -134,6 +139,8 @@ class Creature {
       }
     }
 
+    if (this.def.builder) this._gatherAndBuild(world, sim);   // sapients gather + build
+
     this.energy -= this.def.metabolism * this.size;   // cost of living
     this.age++;
 
@@ -155,6 +162,52 @@ class Creature {
     sim.grid[sim.world.idx(this.x, this.y)] = null;
     this.x = nx; this.y = ny;
     sim.grid[sim.world.idx(nx, ny)] = this;
+  }
+
+  // gather wood from trees / stone from ore, and raise structures from a tech tree
+  _gatherAndBuild(world, sim) {
+    if (this.buildCd > 0) this.buildCd--;
+    for (const [dx, dy] of [[0, 0], [-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const ax = this.x + dx, ay = this.y + dy;
+      if (!world.inBounds(ax, ay)) continue;
+      const i = world.idx(ax, ay);
+      if (world.tree[i] && this.wood < CONFIG.invMax) {
+        this.wood += CONFIG.gatherRate;
+        if (Math.random() < 0.06) world.tree[i] = 0;     // tree gets felled
+        break;
+      }
+      if (world.ore[i] && this.stone < CONFIG.invMax) {
+        this.stone += CONFIG.gatherRate * (world.ore[i] === 2 ? 1.4 : 1);
+        if (Math.random() < 0.05) world.ore[i] = 0;       // vein runs out
+        break;
+      }
+    }
+    if (this.buildCd > 0) return;
+    // build the best (highest-tier) structure we can afford and have the prerequisite for
+    for (let t = STRUCTS.length - 1; t >= 0; t--) {
+      const st = STRUCTS[t];
+      if (this.wood < st.cost.wood || this.stone < st.cost.stone) continue;
+      if (st.requires && !sim.hasStructNear(this.x, this.y, st.requires, CONFIG.buildRadius)) continue;
+      if (sim.hasStructNear(this.x, this.y, st.key, st.spacing)) continue;   // don't stack duplicates
+      const spot = this._buildSpot(world, sim);
+      if (spot < 0) continue;
+      sim.build(spot, st.id);
+      this.wood -= st.cost.wood; this.stone -= st.cost.stone;
+      this.buildCd = CONFIG.buildCooldown;
+      break;
+    }
+  }
+
+  _buildSpot(world, sim) {
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [0, 0]]) {
+      const x = this.x + dx, y = this.y + dy;
+      if (!world.inBounds(x, y) || world.isWater(x, y)) continue;
+      const i = world.idx(x, y);
+      if (world.struct[i] >= 0) continue;          // already built on
+      if ((dx || dy) && sim.grid[i]) continue;     // tile taken by another creature
+      return i;
+    }
+    return -1;
   }
 
   reproduce(world, sim) {

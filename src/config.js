@@ -70,6 +70,15 @@ const CONFIG = {
   dayLength: 1200,        // ticks per full day/night cycle
   yearLength: 4800,       // ticks per year (4 seasons, ~one day each)
 
+  // --- resources & building (sapients gather wood/stone and build structures) ---
+  gatherRate: 0.6,        // resource gained per tick next to a tree / ore
+  invMax: 40,             // max wood or stone a creature carries
+  oreChance: 0.22,        // fraction of mountain tiles that hold ore
+  treeRegrow: 0.0010,     // chance a forest tile regrows a tree each tick
+  buildRadius: 7,         // how near a required structure must be to build the next tier
+  buildCooldown: 60,      // ticks a builder waits between builds
+  farmFood: 0.05,         // food a farm tops up on nearby tiles each tick
+
   // --- speed ---
   ticksPerFrame: 2,       // sim steps per frame; lower = calmer, easier to follow
 };

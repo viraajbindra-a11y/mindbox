@@ -30,6 +30,7 @@ class Simulation {
     this.counts = {};
     this.history = [];
     this.selected = null;
+    this.structs = [];
     this.seed();
   }
 
@@ -47,7 +48,50 @@ class Simulation {
     this.counts = {};
     this.history = [];
     this.selected = null;
+    this.structs = [];
     this.seed();
+  }
+
+  // --- structures ---
+  build(idx, id) {
+    if (this.world.struct[idx] >= 0) return;
+    this.world.struct[idx] = id;
+    this.structs.push({ idx, id });
+  }
+
+  hasStructNear(cx, cy, key, R) {
+    const want = STRUCT_BY_KEY[key].id, W = this.world;
+    for (let y = cy - R; y <= cy + R; y++)
+      for (let x = cx - R; x <= cx + R; x++) {
+        if (W.inBounds(x, y) && W.struct[W.idx(x, y)] === want) return true;
+      }
+    return false;
+  }
+
+  // structure auras: farms grow food, huts heal kin, towers smite predators
+  applyStructures() {
+    const W = this.world;
+    for (const s of this.structs) {
+      const eff = STRUCTS[s.id].effect;
+      const cx = s.idx % W.w, cy = (s.idx / W.w) | 0;
+      if (eff === 'farm') {
+        for (let y = cy - 2; y <= cy + 2; y++) for (let x = cx - 2; x <= cx + 2; x++) {
+          if (!W.inBounds(x, y)) continue; const i = W.idx(x, y); const b = W.biome[i];
+          if (b === B.GRASS || b === B.SAVANNA || b === B.FOREST) W.food[i] = Math.min(0.95, W.food[i] + CONFIG.farmFood);
+        }
+      } else if (eff === 'heal' || eff === 'camp' || eff === 'monument') {
+        const R = eff === 'monument' ? 5 : 3;
+        for (let y = cy - R; y <= cy + R; y++) for (let x = cx - R; x <= cx + R; x++) {
+          if (!W.inBounds(x, y)) continue; const o = this.grid[W.idx(x, y)];
+          if (o && o.def.builder) o.energy = Math.min(o.maxE, o.energy + 0.06);
+        }
+      } else if (eff === 'tower') {
+        for (let y = cy - 4; y <= cy + 4; y++) for (let x = cx - 4; x <= cx + 4; x++) {
+          if (!W.inBounds(x, y)) continue; const o = this.grid[W.idx(x, y)];
+          if (o && o.def.diet !== 'plant' && !o.def.builder) { o.energy -= 0.7; if (o.energy <= 0) this.kill(o); }
+        }
+      }
+    }
   }
 
   canStand(def, x, y) {
@@ -107,6 +151,7 @@ class Simulation {
     this.world.grow(CONFIG.foodGrowth * seasonBlend(this.tickCount).food);   // plants grow with the season
     this.rebuildGrid();
     this.updateFire();
+    if (this.tickCount % 2 === 0) this.applyStructures();
 
     this.counts = {};
     for (const c of this.creatures) this.counts[c.species] = (this.counts[c.species] || 0) + 1;
@@ -232,6 +277,7 @@ class Simulation {
       elev: bytesToB64(w.elev), moist: bytesToB64(w.moist),
       temp: bytesToB64(w.temp), food: bytesToB64(w.food),
       tick: this.tickCount, born: this.born, died: this.died,
+      structs: this.structs.map(s => [s.idx, s.id]),
       creatures: this.creatures.map(c => ({
         k: c.species, x: c.x, y: c.y, e: c.energy, h: c.hue, g: c.generation, a: c.age,
         sz: c.size, vi: c.vision,
@@ -251,6 +297,8 @@ class Simulation {
     w.food = b64ToF32(d.food);
     w.fire = new Float32Array(d.gw * d.gh);
     this.world = w;
+    this.structs = (d.structs || []).map(([idx, id]) => ({ idx, id }));
+    for (const s of this.structs) w.struct[s.idx] = s.id;
     this.creatures = d.creatures.filter(o => SPECIES[o.k]).map(o => {
       const brain = new Brain(CONFIG.brainLayers);
       if (o.br) brain.setArrays(o.br.map(b64ToF32));
@@ -276,10 +324,13 @@ class Simulation {
       sizeSum += c.size; visSum += c.vision;
     }
     const n = this.creatures.length || 1;
+    const structCensus = {};
+    for (const s of this.structs) { const k = STRUCTS[s.id].key; structCensus[k] = (structCensus[k] || 0) + 1; }
     return {
       tick: this.tickCount, pop: this.creatures.length, census,
       maxGen, oldest, born: this.born, died: this.died,
       avgSize: sizeSum / n, avgVision: visSum / n,
+      structs: this.structs.length, structCensus,
     };
   }
 }

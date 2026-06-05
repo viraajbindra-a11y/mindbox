@@ -127,7 +127,19 @@ function updateHUD() {
   set('stat-oldest', s.oldest);
   set('stat-born', s.born);
   set('stat-died', s.died);
+  set('stat-structs', s.structs);
   renderCensus(s.census);
+  renderBuilds(s.structCensus);
+}
+
+function renderBuilds(sc) {
+  const sec = document.getElementById('builds-sec');
+  const total = STRUCTS.reduce((a, st) => a + (sc[st.key] || 0), 0);
+  if (!total) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  document.getElementById('builds').innerHTML = STRUCTS
+    .map(st => ({ st, n: sc[st.key] || 0 })).filter(r => r.n)
+    .map(r => `<span class="cspecies" title="${r.st.name}">${r.st.emoji} ${r.n}</span>`).join('');
 }
 
 function renderCensus(census) {

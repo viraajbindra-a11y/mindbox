@@ -137,7 +137,21 @@ class Renderer {
           ctx.arc(px + s / 2, py + s / 2, s * 0.34, 0, 6.283);
           ctx.fill();
         }
+        if (drawTrees && world.ore[i]) {
+          ctx.fillStyle = world.ore[i] === 2 ? '#d8b24a' : '#c2cad2';   // metal / stone
+          ctx.beginPath(); ctx.arc(px + s * 0.34, py + s * 0.36, s * 0.15, 0, 6.283); ctx.fill();
+          ctx.beginPath(); ctx.arc(px + s * 0.62, py + s * 0.6, s * 0.11, 0, 6.283); ctx.fill();
+        }
       }
+    }
+
+    // structures (under creatures)
+    for (const st of sim.structs) {
+      const sx = st.idx % W, sy = (st.idx / W) | 0;
+      if (sx < x0 - 1 || sx > x1 + 1 || sy < y0 - 1 || sy > y1 + 1) continue;
+      const px = (sx - this.cam.x) * s, py = (sy - this.cam.y) * s;
+      if (s >= 8) drawStructure(ctx, st, px, py, s, sim.tickCount);
+      else { ctx.fillStyle = STRUCTS[st.id].color; ctx.fillRect(px + s * 0.2, py + s * 0.2, s * 0.6, s * 0.6); }
     }
 
     // creatures — animated models when zoomed in, colored dots when far out

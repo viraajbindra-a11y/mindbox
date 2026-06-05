@@ -42,6 +42,8 @@ class World {
     this.tree = new Uint8Array(n);
     this.food = new Float32Array(n);
     this.fire = new Float32Array(n);
+    this.ore = new Uint8Array(n);              // 0 none, 1 stone, 2 metal
+    this.struct = new Int16Array(n).fill(-1);  // structure id at tile, -1 = none
     this.generate();
   }
 
@@ -78,6 +80,8 @@ class World {
         this.biome[i] = b;
         this.tree[i] = b === B.FOREST && Math.random() < 0.7 ? 1 : 0;
         this.food[i] = fertilityOf(b) * CONFIG.foodStart;
+        if (b === B.ROCK && Math.random() < CONFIG.oreChance) this.ore[i] = Math.random() < 0.3 ? 2 : 1;
+        else if ((b === B.GRASS || b === B.SAVANNA || b === B.SAND) && Math.random() < 0.02) this.ore[i] = 1;  // surface boulders → stone on the plains
       }
     }
   }
@@ -95,6 +99,7 @@ class World {
     for (let i = 0; i < f.length; i++) {
       const cap = fertilityOf(biome[i]);
       if (cap > 0 && f[i] < cap) f[i] = Math.min(cap, f[i] + rate * cap);
+      if (biome[i] === B.FOREST && this.tree[i] === 0 && Math.random() < CONFIG.treeRegrow) this.tree[i] = 1;
     }
   }
 

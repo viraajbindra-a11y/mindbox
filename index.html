@@ -75,11 +75,17 @@
           <div><span>Oldest</span><b id="stat-oldest">0</b></div>
           <div><span>Births</span><b id="stat-born">0</b></div>
           <div><span>Deaths</span><b id="stat-died">0</b></div>
+          <div><span>🏛 Structures</span><b id="stat-structs">0</b></div>
         </section>
 
         <section>
           <label>Census</label>
           <div id="census" class="census"></div>
+        </section>
+
+        <section id="builds-sec" style="display:none">
+          <label>Builds — sapients gather wood &amp; ore to construct these</label>
+          <div id="builds" class="census"></div>
         </section>
 
         <section>
@@ -118,6 +124,7 @@
 
   <script src="src/config.js"></script>
   <script src="src/species.js"></script>
+  <script src="src/structures.js"></script>
   <script src="src/noise.js"></script>
   <script src="src/brain.js"></script>
   <script src="src/world.js"></script>

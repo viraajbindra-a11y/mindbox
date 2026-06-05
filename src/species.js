@@ -61,10 +61,10 @@ const SPECIES = {
               reproduceAt: 130, start: 7, min: 2, cap: 55 }),
 
   // ---------------- sapients (land, go to war) ----------------
-  human: sp({ name: 'Human', emoji: '🧑', hue: 35, diet: 'omni', eats: ['sheep', 'deer', 'boar', 'orc'],
+  human: sp({ name: 'Human', emoji: '🧑', hue: 35, diet: 'omni', builder: true, eats: ['sheep', 'deer', 'boar', 'orc'],
               size: 1.0, vision: 6, metabolism: 0.16, maxEnergy: 170, preyEnergy: 54, foodValue: 28,
               reproduceAt: 110, start: 16, min: 3, cap: 120 }),
-  orc:   sp({ name: 'Orc', emoji: '👹', hue: 110, diet: 'omni', eats: ['sheep', 'deer', 'human'],
+  orc:   sp({ name: 'Orc', emoji: '👹', hue: 110, diet: 'omni', builder: true, eats: ['sheep', 'deer', 'human'],
               size: 1.1, vision: 6, metabolism: 0.18, maxEnergy: 180, preyEnergy: 56, foodValue: 26,
               reproduceAt: 115, start: 14, min: 3, cap: 110 }),
 
@@ -76,10 +76,10 @@ const SPECIES = {
                reproduceAt: 220, reproduceCost: 140, maxAge: 5000, start: 2, min: 1, cap: 10 }),
 
   // ---------------- the other two kingdoms ----------------
-  elf:   sp({ name: 'Elf', emoji: '🧝', hue: 150, diet: 'omni', eats: ['rabbit', 'deer', 'orc'],
+  elf:   sp({ name: 'Elf', emoji: '🧝', hue: 150, diet: 'omni', builder: true, eats: ['rabbit', 'deer', 'orc'],
               vision: 7, metabolism: 0.15, maxEnergy: 165, preyEnergy: 52, reproduceAt: 108,
               start: 14, min: 3, cap: 110 }),
-  dwarf: sp({ name: 'Dwarf', emoji: '🧔', hue: 30, diet: 'omni', eats: ['boar', 'sheep', 'orc'],
+  dwarf: sp({ name: 'Dwarf', emoji: '🧔', hue: 30, diet: 'omni', builder: true, eats: ['boar', 'sheep', 'orc'],
               size: 0.95, vision: 5, metabolism: 0.16, maxEnergy: 175, preyEnergy: 54, reproduceAt: 112,
               start: 14, min: 3, cap: 100 }),
 
