@@ -12,6 +12,28 @@ const BIOME_COLOR = {
   [B.SNOW]:    [232, 238, 242],
 };
 
+// sky overlay keyframes over one day: [t, r, g, b, alpha]
+const SKY_KEYS = [
+  [0.00, 10, 16, 44, 0.50],   // midnight
+  [0.22, 22, 24, 56, 0.42],   // pre-dawn
+  [0.28, 240, 140, 70, 0.22], // sunrise (warm)
+  [0.40, 255, 226, 184, 0.05],
+  [0.50, 255, 255, 255, 0.00],// noon (clear)
+  [0.68, 255, 232, 190, 0.05],
+  [0.76, 242, 120, 80, 0.24], // sunset (warm)
+  [0.83, 70, 44, 92, 0.34],   // dusk (purple)
+  [0.92, 12, 18, 46, 0.48],
+  [1.00, 10, 16, 44, 0.50],
+];
+function skyOverlay(t) {
+  let a = SKY_KEYS[0], b = SKY_KEYS[SKY_KEYS.length - 1];
+  for (let i = 0; i < SKY_KEYS.length - 1; i++) {
+    if (t >= SKY_KEYS[i][0] && t <= SKY_KEYS[i + 1][0]) { a = SKY_KEYS[i]; b = SKY_KEYS[i + 1]; break; }
+  }
+  const f = (t - a[0]) / ((b[0] - a[0]) || 1);
+  return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f, a[4] + (b[4] - a[4]) * f];
+}
+
 class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -112,8 +134,8 @@ class Renderer {
     }
 
     // creatures — animated models when zoomed in, colored dots when far out
-    const daylight = 0.5 + 0.5 * Math.sin((sim.tickCount / CONFIG.dayLength) * 6.283);
-    const night = daylight < 0.33;
+    const dayT = (sim.tickCount / CONFIG.dayLength) % 1;        // time of day, 0..1
+    const night = (0.5 + 0.5 * Math.sin(2 * Math.PI * (dayT - 0.25))) < 0.33;
     const drawModels = s >= 12;
     for (const c of sim.creatures) {
       if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
@@ -151,9 +173,10 @@ class Renderer {
       ctx.stroke();
     }
 
-    // day/night tint (purely visual) — reuses daylight from above
-    if (daylight < 0.96) {
-      ctx.fillStyle = `rgba(10,18,48,${((1 - daylight) * 0.4).toFixed(3)})`;
+    // day/night sky: a coloured overlay cycling dawn → day → dusk → night
+    const sky = skyOverlay(dayT);
+    if (sky[3] > 0.003) {
+      ctx.fillStyle = `rgba(${sky[0] | 0},${sky[1] | 0},${sky[2] | 0},${sky[3].toFixed(3)})`;
       ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
   }
