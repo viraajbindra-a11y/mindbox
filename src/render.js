@@ -167,6 +167,18 @@ class Renderer {
       }
     }
 
+    // roads — worn dirt paths between trading cities, drawn over the terrain
+    if (Kingdoms.roads) {
+      const rd = Kingdoms.roads;
+      ctx.globalAlpha = 0.82;
+      ctx.fillStyle = '#9a7c4e';
+      for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
+        if (!rd[ty * W + tx]) continue;
+        ctx.fillRect((tx - this.cam.x) * s, (ty - this.cam.y) * s, size, size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
     // kingdom territory — a soft fill plus a CRISP BORDER tracing each realm's
     // irregular zone (so the organic, house-driven shape reads at a glance)
     if (Kingdoms.territory) {

@@ -23,6 +23,7 @@ const Kingdoms = {
     const n = sim.world.w * sim.world.h;
     this.territory = new Int16Array(n);
     this._dist = new Float32Array(n);
+    this.roads = new Uint8Array(n);
   },
 
   log(msg) { if (!this.events) this.events = []; if (this.events[0] === msg) return; this.events.unshift(msg); if (this.events.length > 30) this.events.pop(); },
@@ -63,6 +64,7 @@ const Kingdoms = {
     this._rebellion(sim);
     this._allianceWars();
     this._trade();
+    this._roads(sim);
     this._territory(sim);
     this._war(sim);
   },
@@ -80,6 +82,34 @@ const Kingdoms = {
         routes.push([a.id, b.id]);
       }
     this.tradeRoutes = routes;
+  },
+
+  // roads: worn paths traced between trading cities (a capital and each trade partner).
+  // Roads stop at the water's edge. Purely a map feature for now.
+  _roads(sim) {
+    const W = sim.world.w, H = sim.world.h, biome = sim.world.biome;
+    if (!this.roads || this.roads.length !== W * H) this.roads = new Uint8Array(W * H);
+    this.roads.fill(0);
+    const stamp = (x, y) => {
+      if (x < 0 || y < 0 || x >= W || y >= H) return;
+      const i = y * W + x, b = biome[i];
+      if (b !== B.DEEP && b !== B.SHALLOW) this.roads[i] = 1;   // roads don't run over open water
+    };
+    const line = (x0, y0, x1, y1) => {                          // Bresenham
+      let dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1, err = dx + dy, g = 0;
+      let x = x0, y = y0;
+      while (g++ < 4000) {
+        stamp(x, y);
+        if (x === x1 && y === y1) break;
+        const e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x += sx; }
+        if (e2 <= dx) { err += dx; y += sy; }
+      }
+    };
+    for (const r of (this.tradeRoutes || [])) {
+      const a = this.byId[r[0]], b = this.byId[r[1]];
+      if (a && b) line(a.cx, a.cy, b.cx, b.cy);
+    }
   },
 
   // allies are dragged into each other's wars (one hop per update) — this is what
