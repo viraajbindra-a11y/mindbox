@@ -335,7 +335,10 @@ function selectTool(t) {
 }
 
 function setupCanvas() {
-  const canvas = renderer.canvas;
+  // bind to the VISIBLE display canvas, not renderer.canvas (the offscreen low-res
+  // buffer, which isn't in the DOM — listeners there never fire). screenToTile/zoomAt/
+  // pan all take display-space coords, so the display rect is the right reference too.
+  const canvas = renderer.display;
   let lmb = false, pan = false, last = null;
 
   const apply = (e, isDown) => {
