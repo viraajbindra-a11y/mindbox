@@ -152,7 +152,7 @@ const BuildGen = {
   },
 };
 
-function drawStructure(ctx, def, px, py, s, t) {
+function drawStructure(ctx, def, px, py, s, t, style) {
   ctx.save();
   ctx.translate(px + s / 2, py + s / 2);
   if (def.fixed && def.fixed !== '_construction' && STRUCT_DRAW[def.fixed]) {
@@ -171,7 +171,38 @@ function drawStructure(ctx, def, px, py, s, t) {
       ctx.fillText(def.emoji, 0, -0.08 * s);
     }
   }
+  // CULTURE & AGE: tint the building to its realm and crown it with an age-grown roof + flag
+  if (style && def.fixed !== '_construction') drawCultureAccent(ctx, s, style, def);
   ctx.restore();
+}
+
+// A realm's culture and tech-age shape how its buildings look: the roof grows from a
+// Stone-Age thatch peak to a tiled gable, a steep spire, then a dome; and a flag in
+// the nation's colour flies above, advancing from a pennant to a swallowtail banner.
+function drawCultureAccent(ctx, s, style, def) {
+  const col = style.color || '#ccc';
+  const tech = Math.max(0, Math.min(7, style.tech | 0));
+  const generic = !def.fixed;
+  // nation tint over a generic building's body (a whole village shares its realm's hue)
+  if (generic) { ctx.globalAlpha = 0.26; ctx.fillStyle = col; ctx.fillRect(-0.4 * s, -0.06 * s, 0.8 * s, 0.42 * s); ctx.globalAlpha = 1; }
+  // age-grown roof (generic buildings only, so fixed procedural art stays intact)
+  if (generic) {
+    const ROOF = ['#7a5a36', '#7a5a36', '#9c4a32', '#9c4a32', '#6a6f7a', '#6a6f7a', '#454b57', '#7a4aa0'];
+    ctx.fillStyle = ROOF[tech];
+    if (tech <= 1) { ctx.beginPath(); ctx.moveTo(-0.46 * s, -0.06 * s); ctx.lineTo(0, -0.4 * s); ctx.lineTo(0.46 * s, -0.06 * s); ctx.closePath(); ctx.fill(); }
+    else if (tech <= 3) { ctx.beginPath(); ctx.moveTo(-0.46 * s, -0.06 * s); ctx.lineTo(-0.26 * s, -0.34 * s); ctx.lineTo(0.26 * s, -0.34 * s); ctx.lineTo(0.46 * s, -0.06 * s); ctx.closePath(); ctx.fill(); }
+    else if (tech <= 5) { ctx.beginPath(); ctx.moveTo(-0.42 * s, -0.06 * s); ctx.lineTo(0, -0.48 * s); ctx.lineTo(0.42 * s, -0.06 * s); ctx.closePath(); ctx.fill(); }
+    else { ctx.beginPath(); ctx.arc(0, -0.06 * s, 0.4 * s, Math.PI, 0); ctx.fill(); }
+  }
+  // a flag in the realm colour, its shape advancing with the age
+  const fx = 0.34 * s, base = -0.06 * s, ftop = -0.42 * s;
+  ctx.strokeStyle = '#28282e'; ctx.lineWidth = Math.max(1, 0.05 * s);
+  ctx.beginPath(); ctx.moveTo(fx, base); ctx.lineTo(fx, ftop); ctx.stroke();        // pole
+  ctx.fillStyle = col;
+  const fy = ftop, fh = 0.14 * s, fw = 0.26 * s;
+  if (tech <= 1) { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + fw, fy + fh * 0.5); ctx.lineTo(fx, fy + fh); ctx.closePath(); ctx.fill(); }         // pennant
+  else if (tech <= 4) { ctx.fillRect(fx, fy, fw, fh); }                                                                                                       // banner
+  else { ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + fw, fy); ctx.lineTo(fx + fw * 0.68, fy + fh * 0.5); ctx.lineTo(fx + fw, fy + fh); ctx.lineTo(fx, fy + fh); ctx.closePath(); ctx.fill(); }  // swallowtail
 }
 
 buildDefsInit();

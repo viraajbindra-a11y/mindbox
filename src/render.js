@@ -221,8 +221,11 @@ class Renderer {
       const sx = st.idx % W, sy = (st.idx / W) | 0;
       if (sx < x0 - 1 || sx > x1 + 1 || sy < y0 - 1 || sy > y1 + 1) continue;
       const px = (sx - this.cam.x) * s, py = (sy - this.cam.y) * s;
-      if (s >= 8) drawStructure(ctx, def, px, py, s, sim.tickCount);
-      else { ctx.fillStyle = def.color || '#a9763f'; ctx.fillRect(px + s * 0.2, py + s * 0.2, s * 0.6, s * 0.6); }
+      if (s >= 8) {
+        const k = Kingdoms.territory ? Kingdoms.byId[Kingdoms.territory[st.idx]] : null;   // the realm that owns this tile
+        const style = k ? { color: k.color, tech: k.tech || 0 } : null;                     // its colour + tech age shape the building
+        drawStructure(ctx, def, px, py, s, sim.tickCount, style);
+      } else { ctx.fillStyle = def.color || '#a9763f'; ctx.fillRect(px + s * 0.2, py + s * 0.2, s * 0.6, s * 0.6); }
     }
 
     // creatures — animated models when zoomed in, colored dots when far out
