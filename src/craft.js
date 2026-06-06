@@ -74,7 +74,8 @@ const Craft = {
     if (!m) return null;
     const j = JSON.parse(m[0]);
     if (!j.name) return null;
-    return { name: String(j.name).toLowerCase(), emoji: (j.emoji || '✨') };
+    const name = cleanLLM(String(j.name).toLowerCase()); if (!name) return null;   // crude name -> built-in fallback recipe
+    return { name, emoji: (j.emoji || '✨') };
   },
 
   _fallback(a, b) {

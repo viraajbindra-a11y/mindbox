@@ -138,9 +138,10 @@ const BuildGen = {
     const out = await Ollama.chat(sys, list, { json: true, temperature: 0.8, maxTokens: 70 });
     const m = out.match(/\{[\s\S]*\}/); if (!m) return null;
     const j = JSON.parse(m[0]); if (!j.name) return null;
+    const name = cleanLLM(String(j.name).slice(0, 28)); if (!name) return null;   // crude name -> fallback building used
     const effect = BUILD_EFFECTS.includes(j.effect) ? j.effect : 'shelter';
     const color = effect === 'defense' ? '#8a8378' : effect === 'farm' ? '#c9b047' : effect === 'wonder' ? '#cdd4dc' : '#a9763f';
-    return { name: String(j.name).slice(0, 28), emoji: (j.emoji || '🏠'), effect, color };
+    return { name, emoji: (j.emoji || '🏠'), effect, color };
   },
 
   save() { return { defs: BUILD_DEFS.slice(BUILD_SEED), cache: this.cache }; },

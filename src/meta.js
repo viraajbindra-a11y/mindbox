@@ -147,7 +147,7 @@ const Meta = {
       const usr = `The kingdom ${k.name}, a realm of ${k.species}s, currently in the ${this.ageOf(k).name}.`;
       const out = await Ollama.chat(sys, usr, { json: true, temperature: 1.05, maxTokens: 160 });
       const m = out.match(/\{[\s\S]*\}/);
-      if (m && Kingdoms.byId[k.id]) {
+      if (m && cleanLLM(m[0]) && Kingdoms.byId[k.id]) {   // crude content anywhere -> keep safe procedural seeds
         const j = JSON.parse(m[0]);
         if (j.trait) k.culture.trait = String(j.trait).slice(0, 16);
         if (j.art) k.culture.art = String(j.art).slice(0, 18);

@@ -258,8 +258,8 @@ const Kingdoms = {
       const out = await Ollama.chat(
         'You name fantasy kingdoms. Reply with ONLY the kingdom name, 1-2 words, no quotes or punctuation.',
         `Invent a kingdom name for a realm of ${k.species}s.`, { maxTokens: 12, temperature: 1.05 });
-      const n = out.trim().split('\n')[0].replace(/["'.,]/g, '').slice(0, 22).trim();
-      if (n && this.byId[k.id]) k.name = n;
+      const n = cleanLLM(out.trim().split('\n')[0].replace(/["'.,]/g, '').slice(0, 22).trim());
+      if (n && this.byId[k.id]) k.name = n;   // crude name -> keep the safe procedural one
     } catch (e) {}
   },
 

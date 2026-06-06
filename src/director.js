@@ -60,7 +60,7 @@ const Director = {
     else if (act === 'blessing') sim.blessing(cx, cy, 7);
     else if (act === 'meteor') sim.meteor(cx, cy);
     // 'peace' → nothing
-    const reason = (a.reason || act).slice(0, 120);
+    const reason = (cleanLLM(a.reason) || act).slice(0, 120);   // keep crude narration out of the history log
     Kingdoms.log(`${DIRECTOR_ICON[act]} ${reason}`);
   },
 

@@ -117,3 +117,15 @@ function seasonBlend(tick) {
     strength: L(a.strength, b.strength),
   };
 }
+
+// --- content filter for LLM-generated text -------------------------------------
+// The local model sometimes returns crude or NSFW text (e.g. a kingdom name).
+// MindBox is a kids' game, so every generated string shown to the player is
+// screened: if it trips the blocklist we return '' and the caller falls back to a
+// safe procedural value. Better to drop a name than print something gross.
+const LLM_BAD = /(fuck|shit|cunt|\bcock|\bdick|pussy|penis|vagina|masturbat|\bcum\b|cumshot|orgasm|porn|nsfw|\brape|whore|\bslut|bitch|\banal\b|\banus|nigg|\bfag|retard|nazi|hitler|naked|\bnude|horny|erotic|genital|testicl|scrotum|semen|ejacul|\bclit|dildo|blow\W?job|hand\W?job|boner|\bsex|titties|titty|\btits\b|molest|pedophil|incest|bestial|\bass\b|asshole|\bdamn\b|\bhell\b|\bpiss|\bturd|\bcrap\b|\bkkk\b)/i;
+function cleanLLM(text) {
+  if (text == null) return '';
+  const s = String(text);
+  return LLM_BAD.test(s) ? '' : s;
+}
