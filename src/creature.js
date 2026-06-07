@@ -204,8 +204,8 @@ class Creature {
     if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) return;   // arrived — hold and besiege
     const sx = Math.sign(dx), sy = Math.sign(dy);
     const tries = Math.abs(dx) >= Math.abs(dy)
-      ? [[sx, 0], [0, sy || 1], [0, -(sy || 1)], [-sx || 1, 0]]
-      : [[0, sy], [sx || 1, 0], [-(sx || 1), 0], [0, -sy || 1]];
+      ? [[sx, 0], [0, sy || 1], [0, -(sy || 1)], [-(sx || 1), 0]]
+      : [[0, sy], [sx || 1, 0], [-(sx || 1), 0], [0, -(sy || 1)]];
     for (const [mx, my] of tries) {
       if (!mx && !my) continue;
       const nx = this.x + mx, ny = this.y + my;

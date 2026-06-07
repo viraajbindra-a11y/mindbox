@@ -319,7 +319,7 @@ class Simulation {
   }
 
   selectAt(tx, ty) {
-    let best = null, bestD = 81;
+    let best = null, bestD = 9;   // ~3-tile snap; was 9 tiles, which grabbed far creatures on empty clicks
     for (const c of this.creatures) {
       const d = (c.x - tx) ** 2 + (c.y - ty) ** 2;
       if (d < bestD) { bestD = d; best = c; }
@@ -332,7 +332,7 @@ class Simulation {
     const w = this.world;
     return JSON.stringify({
       v: 4, gw: w.w, gh: w.h,
-      biome: bytesToB64(w.biome), tree: bytesToB64(w.tree),
+      biome: bytesToB64(w.biome), tree: bytesToB64(w.tree), ore: bytesToB64(w.ore),
       elev: bytesToB64(w.elev), moist: bytesToB64(w.moist),
       temp: bytesToB64(w.temp), food: bytesToB64(w.food),
       tick: this.tickCount, born: this.born, died: this.died,
@@ -351,6 +351,7 @@ class Simulation {
     const w = new World(d.gw, d.gh);
     w.biome = b64ToBytes(d.biome);
     w.tree = b64ToBytes(d.tree);
+    if (d.ore) w.ore = b64ToBytes(d.ore);   // ore must be restored (World() seeds RANDOM ore that won't match the saved terrain)
     w.elev = b64ToF32(d.elev);
     w.moist = b64ToF32(d.moist);
     w.temp = b64ToF32(d.temp);
@@ -372,6 +373,12 @@ class Simulation {
     this.tickCount = d.tick || 0;
     this.born = d.born || 0; this.died = d.died || 0;
     this.counts = {}; this.history = []; this.selected = null;
+    // rebuild the kingdom registry for the loaded world — otherwise the stale pre-load
+    // kingdoms (old ids, old/ wrong-sized territory & roads) run combat against ghost
+    // realms, and on a different map size index out of bounds. Kingdoms re-form from the
+    // loaded creatures within ~120 ticks.
+    Kingdoms.init(this);
+    if (typeof Meta !== 'undefined') Meta.pending = false;
     this.rebuildGrid();
   }
 
