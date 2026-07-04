@@ -1,5 +1,7 @@
 # 🧠 MindBox
 
+**▶️ PLAY NOW — <https://viraajbindra-a11y.github.io/mindbox/>** (any browser, no install)
+
 A **WorldBox-style god sandbox** where every creature is its own **AI agent**.
 
 Each creature carries a small **neural-network brain**. Every tick it senses the
@@ -78,10 +80,25 @@ table — just not endless.
 | | |
 |---|---|
 | **Move** | pan the camera (or right-drag anywhere; scroll to zoom) |
-| **Terrain** | brush land, water, mountains, forest, grass, sand |
+| **Terrain** | brush 11 biomes: land, water, mountains, forest, grass, beach, desert, jungle, swamp, snow, mushroom |
 | **Life** | pick any of 27 species to spawn, 💀 smite an area, or 🔍 **Inspect** a creature |
-| **Disasters** | ☄️ meteor, 🔥 spreading fire, ⚡ lightning, 💣 bomb |
+| **Disasters** | ☄️ meteor, 🔥 fire, ⚡ bolt, 💣 bomb, 🌪 tornado, 🌋 volcano, 🌊 tsunami, ☠️ plague, ✨ bless, 🐉 summon |
 | **Brush** | size of the terrain/disaster brush |
+| **🗺 Minimap** | whole world at a glance — click to jump |
+
+## Civilizations (the WorldBox port, complete)
+
+Humans, elves, dwarves and orcs gather wood & ore and **build villages — the
+buildings themselves are invented by the local LLM** from the resources poured
+in. Villages become **named kingdoms** with organic, house-driven territory,
+**cultures, religions and tech AGES** (Stone → … → Arcane; the LLM writes each
+civilization's identity). Faiths spread, reconcile old enemies and forge
+**alliances** that fight **bloc wars**; realms **trade** (gold routes + roads),
+**rebel**, raise armies, **besiege and conquer** each other — and from the
+**Bronze Age** they sail: ⛵ colonists settle far islands, advanced realms
+launch amphibious invasions. Flip on 🔮 **"Let the AI run the world"** and the
+LLM becomes the god-storyteller, unleashing plagues, raids and dragons with a
+written reason in the 📜 world-history log.
 
 **🔍 Inspect** a creature to watch its actual neural network *think* in real time —
 left nodes are its senses, right nodes are its actions (move + breed).
@@ -112,8 +129,11 @@ Plain HTML + Canvas + JavaScript — no libraries, no build.
 | `src/main.js`     | toolbar, census, graph, live brain viewer, AI panel |
 | `electron/`       | desktop app: installs/runs Ollama, pulls models |
 
-## Ideas for next
+## Done since v0.1 (all shipped)
 
-- Memory in the brain (recurrent) so it can learn things that take several steps.
-- Herding/flocking rewards, disease, seasons.
-- Tribes & buildings (toward true WorldBox civilizations).
+- ~~Memory in the brain (recurrent)~~ ✅ recurrent self-training brains
+- ~~disease, seasons~~ ✅ plague + 4 seasons + day/night
+- ~~Tribes & buildings (toward true WorldBox civilizations)~~ ✅ the whole
+  civilization layer: kingdoms, territory, war & conquest, culture/religion/tech
+  ages, alliances, trade, roads, rebellion, seafaring — plus an LLM world
+  director, synthesized sound, and a desktop app build.
