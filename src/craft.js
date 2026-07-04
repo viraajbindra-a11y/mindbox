@@ -56,6 +56,7 @@ const Craft = {
       const item = this.add(res.name, res.emoji, tier);
       if (!item) return null;
       this.recipes[k] = item.name;
+      if (typeof Sfx !== 'undefined') Sfx.play('craft');
       this.log.unshift({ a, b, r: item.name, emoji: item.emoji });
       if (this.log.length > 60) this.log.pop();
       this.save();

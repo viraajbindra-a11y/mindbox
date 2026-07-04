@@ -125,6 +125,7 @@ const Meta = {
         // holy war: occasionally two faiths come to blows
         if (a.relations[b.id] !== 'war' && Math.random() < 0.06) {
           a.relations[b.id] = 'war'; b.relations[a.id] = 'war';
+          if (typeof Sfx !== 'undefined') Sfx.play('war');
           Kingdoms.log(`${a.religion.symbol} Holy war — ${a.name} (${a.religion.name}) vs ${b.name} (${b.religion.name})`);
         }
         // conversion: a much larger realm spreads its faith to a weaker neighbour

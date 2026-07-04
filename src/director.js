@@ -60,6 +60,7 @@ const Director = {
     else if (act === 'blessing') sim.blessing(cx, cy, 7);
     else if (act === 'meteor') sim.meteor(cx, cy);
     // 'peace' → nothing
+    if (typeof Sfx !== 'undefined' && act !== 'peace') Sfx.play(act === 'monster' ? 'summon' : act);
     const reason = (cleanLLM(a.reason) || act).slice(0, 120);   // keep crude narration out of the history log
     Kingdoms.log(`${DIRECTOR_ICON[act]} ${reason}`);
   },

@@ -220,6 +220,7 @@ const Kingdoms = {
       if (c.soldier && c.armyTarget === loser.id) { c.soldier = false; c.mtx = c.mty = -1; c.armyTarget = 0; }
     }
     if (winner) winner.conquests = (winner.conquests || 0) + 1;
+    if (typeof Sfx !== 'undefined') Sfx.play('conquest');
     this.log(`⚔ ${winner ? winner.name : 'Rebels'} conquered ${loser.name}`);
   },
 

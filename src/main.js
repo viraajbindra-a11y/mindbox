@@ -281,6 +281,12 @@ function setupUI() {
   bindSlider('mut', v => { CONFIG.mutationRate = v / 100; });
 
   setupCanvas();
+  // sound toggle
+  const sfxBtn = document.getElementById('btn-sfx');   // ($ is setupCraft-local)
+  if (sfxBtn) {
+    sfxBtn.textContent = Sfx.enabled ? '🔊' : '🔇';
+    sfxBtn.onclick = () => { sfxBtn.textContent = Sfx.toggle() ? '🔊' : '🔇'; Sfx.play('click'); };
+  }
   // minimap click (or drag) → jump the camera there
   const mm = document.getElementById('minimap');
   if (mm) {
@@ -391,11 +397,11 @@ function setupCanvas() {
     const { tx, ty } = renderer.screenToTile(e.clientX - r.left, e.clientY - r.top);
     if (!sim.world.inBounds(tx, ty)) return;
     if (TERRAIN[tool]) sim.world.terraform(tx, ty, brush, TERRAIN[tool]);
-    else if (tool === 'fire') sim.fireTool(tx, ty, Math.min(brush, 2));
-    else if (tool.startsWith('spawn:')) sim.spawnAt(tool.slice(6), tx, ty);
-    else if (tool === 'smite') sim.smite(tx, ty, brush);
+    else if (tool === 'fire') { sim.fireTool(tx, ty, Math.min(brush, 2)); Sfx.play('fire', 300); }
+    else if (tool.startsWith('spawn:')) { sim.spawnAt(tool.slice(6), tx, ty); Sfx.play('click'); }
+    else if (tool === 'smite') { sim.smite(tx, ty, brush); Sfx.play('smite', 200); }
     else if (tool === 'inspect') { sim.selectAt(tx, ty); if (sim.selected) following = true; }
-    else if (isDown && ONESHOT.has(tool)) sim[tool](tx, ty);
+    else if (isDown && ONESHOT.has(tool)) { sim[tool](tx, ty); Sfx.play(tool); }
   };
 
   canvas.addEventListener('mousedown', e => {

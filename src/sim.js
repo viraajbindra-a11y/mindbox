@@ -60,6 +60,7 @@ class Simulation {
     const di = BuildGen.resolve(resources, (realDi) => {
       // the model finished inventing — swap the construction site for the real building
       if (this.world.struct[idx] === CONSTRUCTION_DI) this.world.struct[idx] = realDi;
+      if (typeof Sfx !== 'undefined') Sfx.play('build', 600);
       const s = this.structs.find(s => s.idx === idx);
       if (s) s.di = realDi;
     });
