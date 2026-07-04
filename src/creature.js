@@ -37,7 +37,17 @@ class Creature {
     if (d === 'air') return true;            // flies over land and water
     const water = world.isWater(x, y);
     if (d === 'water') return water;
-    if (water) return false;
+    if (water) {
+      // SEAFARING: builders of a Bronze+ realm sail shallow seas; Classical+ realms
+      // cross deep ocean. Tech unlocks the waves — colonists drift to new islands and
+      // cluster into colonies; armies march over the sea to invade (all emergent).
+      if (this.def.builder && this.kingdomId && typeof Kingdoms !== 'undefined') {
+        const k = Kingdoms.byId[this.kingdomId];
+        const t = k ? (k.tech || 0) : 0;
+        return world.biome[world.idx(x, y)] === B.DEEP ? t >= 3 : t >= 1;
+      }
+      return false;
+    }
     // a wall blocks everyone except builders (whose kin raised it)
     const di = world.struct[world.idx(x, y)];
     if (di >= 0 && BUILD_DEFS[di] && BUILD_DEFS[di].effect === 'wall' && !this.def.builder) return false;

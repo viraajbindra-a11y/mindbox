@@ -248,6 +248,15 @@ class Renderer {
       if (c.x < x0 - 1 || c.x > x1 + 1 || c.y < y0 - 1 || c.y > y1 + 1) continue;
       const px = (c.x - this.cam.x) * s + s / 2;
       const py = (c.y - this.cam.y) * s + s / 2;
+      // a sailing builder rides a little wooden boat
+      if (c.def.builder && world.isWater(c.x, c.y) && s >= 3) {
+        const bob = Math.sin((sim.tickCount + c.x * 7 + c.y * 13) * 0.15) * s * 0.06;
+        ctx.fillStyle = '#7a5230';
+        ctx.beginPath();
+        ctx.moveTo(px - s * 0.52, py + bob + s * 0.10);
+        ctx.quadraticCurveTo(px, py + bob + s * 0.52, px + s * 0.52, py + bob + s * 0.10);
+        ctx.closePath(); ctx.fill();
+      }
       if (drawModels) { drawCreature(ctx, c, px, py, s, night); continue; }
       const light = 42 + Math.min(34, (c.energy / c.maxE) * 34);
       const sz = Math.min(1.5, c.size);
