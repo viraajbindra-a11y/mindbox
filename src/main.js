@@ -27,8 +27,40 @@ function loop() {
   renderer.draw(sim);
   updateHUD();
   drawChart();
+  drawMinimap();
   updateInspector();
   requestAnimationFrame(loop);
+}
+
+// minimap: whole world at 1px/tile (biome + territory), scaled up crisp, with the
+// camera's viewport rectangle. Click to jump the camera anywhere.
+let _mmImg = null, _mmFrame = 0;
+function drawMinimap() {
+  const cv = document.getElementById('minimap'); if (!cv) return;
+  const mctx = cv.getContext('2d');
+  const W = sim.world.w, H = sim.world.h;
+  if ((_mmFrame++ % 12) === 0 || !_mmImg) {          // rebuild the world image ~5x/sec
+    if (!_mmImg) _mmImg = new ImageData(W, H);
+    const px = _mmImg.data, terr = Kingdoms.territory;
+    for (let i = 0; i < W * H; i++) {
+      let [r, g, b] = BIOME_COLOR[sim.world.biome[i]];
+      const id = terr ? terr[i] : 0;
+      if (id) {
+        const col = Kingdoms.colorOf(id);
+        if (col) { const n = parseInt(col.slice(1), 16); r = r * 0.45 + (n >> 16) * 0.55; g = g * 0.45 + ((n >> 8) & 255) * 0.55; b = b * 0.45 + (n & 255) * 0.55; }
+      }
+      const o = i * 4; px[o] = r; px[o + 1] = g; px[o + 2] = b; px[o + 3] = 255;
+    }
+  }
+  // blit 1px/tile world → minimap canvas, nearest-neighbour
+  if (!drawMinimap._buf) { drawMinimap._buf = document.createElement('canvas'); drawMinimap._buf.width = W; drawMinimap._buf.height = H; }
+  drawMinimap._buf.getContext('2d').putImageData(_mmImg, 0, 0);
+  mctx.imageSmoothingEnabled = false;
+  mctx.drawImage(drawMinimap._buf, 0, 0, cv.width, cv.height);
+  // camera viewport rectangle
+  const sx = cv.width / W, sy = cv.height / H, cam = renderer.cam;
+  mctx.strokeStyle = '#ffd166'; mctx.lineWidth = 1;
+  mctx.strokeRect(cam.x * sx, cam.y * sy, (renderer.canvas.width / cam.scale) * sx, (renderer.canvas.height / cam.scale) * sy);
 }
 
 function drawChart() {
@@ -249,6 +281,19 @@ function setupUI() {
   bindSlider('mut', v => { CONFIG.mutationRate = v / 100; });
 
   setupCanvas();
+  // minimap click (or drag) → jump the camera there
+  const mm = document.getElementById('minimap');
+  if (mm) {
+    const jump = e => {
+      const r = mm.getBoundingClientRect();
+      renderer.centerOn((e.clientX - r.left) / r.width * sim.world.w, (e.clientY - r.top) / r.height * sim.world.h, 1);
+      following = false;
+    };
+    let mdown = false;
+    mm.addEventListener('mousedown', e => { mdown = true; jump(e); });
+    window.addEventListener('mousemove', e => { if (mdown) jump(e); });
+    window.addEventListener('mouseup', () => { mdown = false; });
+  }
   setupCraft();
 }
 
